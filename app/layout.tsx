@@ -8,8 +8,8 @@ import { SessionProvider } from "next-auth/react";
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://chat.vercel.ai"),
-  title: "Next.js Chatbot Template",
-  description: "Next.js chatbot template using the AI SDK.",
+  title: "Cosil Dispute Readiness Check",
+  description: "A structured dispute readiness check from Cosil Solutions Ltd to help organisations and individuals reduce escalation, strengthen decision-making, and choose the right resolution route. Not legal advice",
 };
 
 export const viewport = {
