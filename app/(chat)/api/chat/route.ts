@@ -38,10 +38,6 @@ import { type PostRequestBody, postRequestBodySchema } from "./schema";
 
 export const maxDuration = 60;
 
-/**
- * Cosil-specific guidance layer
- * This is appended to the template’s existing system prompt.
- */
 const COSIL_SYSTEM_ADDON = `
 You are Cosil Solutions Ltd, a UK-based strategic dispute consultancy and mediation practice.
 
@@ -181,7 +177,6 @@ export async function POST(request: Request) {
 
     const modelMessages = await convertToModelMessages(uiMessages);
 
-    // Combine the template’s system prompt with Cosil’s add-on.
     const combinedSystemPrompt = `${systemPrompt({
       selectedChatModel,
       requestHints,
@@ -194,10 +189,7 @@ export async function POST(request: Request) {
           model: getLanguageModel(selectedChatModel),
           system: combinedSystemPrompt,
           messages: modelMessages,
-
-          // If you want to cap tool steps, uncomment this:
-          // stopWhen: stepCountIs(5),
-
+          stopWhen: stepCountIs(5),
           experimental_activeTools: isReasoningModel
             ? []
             : [
@@ -206,7 +198,6 @@ export async function POST(request: Request) {
                 "updateDocument",
                 "requestSuggestions",
               ],
-
           providerOptions: isReasoningModel
             ? {
                 anthropic: {
@@ -214,21 +205,19 @@ export async function POST(request: Request) {
                 },
               }
             : undefined,
-
           tools: {
             getWeather,
             createDocument: createDocument({ session, dataStream }),
             updateDocument: updateDocument({ session, dataStream }),
             requestSuggestions: requestSuggestions({ session, dataStream }),
           },
-
           experimental_telemetry: {
             isEnabled: isProductionEnvironment,
             functionId: "stream-text",
           },
         });
 
-        dataStream.merge(result.toUIMessageStream({ sendReasoning: true }));
+        dataStream.merge(result.toUIMessageStream());
 
         if (titlePromise) {
           const title = await titlePromise;
@@ -283,7 +272,6 @@ export async function POST(request: Request) {
         if (!process.env.REDIS_URL) {
           return;
         }
-
         try {
           const streamContext = getStreamContext();
           if (streamContext) {
