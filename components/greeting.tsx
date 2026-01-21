@@ -38,6 +38,15 @@ export const Greeting = () => {
         <li>• Service charge dispute, how do we reduce risk and repetition?</li>
         <li>• Draft a calm, defensible response to a sensitive complaint</li>
       </motion.ul>
+
+      <motion.div
+        animate={{ opacity: 1, y: 0 }}
+        initial={{ opacity: 0, y: 10 }}
+        transition={{ delay: 1.0 }}
+        className="mt-6 text-xs text-zinc-500"
+      >
+        Guidance is general and strategic, not legal advice. For urgent risk or deadlines, seek appropriate legal support.
+      </motion.div>
     </div>
   );
 };
