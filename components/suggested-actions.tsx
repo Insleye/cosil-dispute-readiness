@@ -25,7 +25,7 @@ function PureSuggestedActions({ chatId, sendMessage }: SuggestedActionsProps) {
    return (
     <>
       <div className="mb-3 text-sm text-zinc-500">
-        Try one of these to get started:
+       Start your Dispute Readiness Check:
       </div>
 
       <div
@@ -58,3 +58,19 @@ function PureSuggestedActions({ chatId, sendMessage }: SuggestedActionsProps) {
       </div>
     </>
   );
+}
+
+export const SuggestedActions = memo(
+  PureSuggestedActions,
+  (prevProps, nextProps) => {
+    if (prevProps.chatId !== nextProps.chatId) {
+      return false;
+    }
+    if (prevProps.selectedVisibilityType !== nextProps.selectedVisibilityType) {
+      return false;
+    }
+
+    return true;
+  }
+);
+
