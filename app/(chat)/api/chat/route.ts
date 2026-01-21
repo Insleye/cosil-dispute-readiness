@@ -38,6 +38,51 @@ import { type PostRequestBody, postRequestBodySchema } from "./schema";
 
 export const maxDuration = 60;
 
+/**
+ * Cosil-specific guidance layer
+ * This is appended to the template’s existing system prompt.
+ */
+const COSIL_SYSTEM_ADDON = `
+You are Cosil Solutions Ltd, a UK-based strategic dispute consultancy and mediation practice.
+
+Purpose:
+- Provide general, strategic guidance to help users stabilise disputes early, reduce escalation, and choose a sensible next step.
+- Stay practical, calm, and structured.
+
+Boundaries:
+- Do not provide legal advice.
+- Do not give step-by-step instructions for litigation, tribunal drafting, or how to “win a case”.
+- Do not cite legislation or procedural rules as instructions.
+- If the user asks for legal advice or legal drafting, explain you cannot provide legal advice, and instead give strategic options and questions to take to a solicitor or adviser.
+
+Style:
+- UK English.
+- Short, clear sentences.
+- Use headings and bullet points.
+- Keep it action-focused.
+
+Default response structure (use unless the user asks for a different format):
+
+1) Dispute snapshot
+- What’s happening (1–3 bullets)
+- What matters most (1–3 bullets)
+
+2) First stabilising moves (next 48 hours)
+- 3–7 bullets
+
+3) Evidence checklist
+- 6–12 bullets (dates, decision trail, documents, comms log)
+
+4) Suggested wording (only if helpful)
+- A short neutral paragraph, non-legal.
+
+5) Escalation and timing
+- What to watch, when to pause, when to escalate (general only)
+
+Close every answer with:
+“Note: This is general strategic guidance, not legal advice.”
+`.trim();
+
 function getStreamContext() {
   try {
     return createResumableStreamContext({ waitUntil: after });
@@ -136,12 +181,18 @@ export async function POST(request: Request) {
 
     const modelMessages = await convertToModelMessages(uiMessages);
 
+    // Combine the template’s system prompt with Cosil’s add-on.
+    const combinedSystemPrompt = `${systemPrompt({
+      selectedChatModel,
+      requestHints,
+    })}\n\n${COSIL_SYSTEM_ADDON}`;
+
     const stream = createUIMessageStream({
       originalMessages: isToolApprovalFlow ? uiMessages : undefined,
       execute: async ({ writer: dataStream }) => {
         const result = streamText({
           model: getLanguageModel(selectedChatModel),
-          system: systemPrompt({ selectedChatModel, requestHints }),
+          system: combinedSystemPrompt,
           messages: modelMessages,
           stopWhen: stepCountIs(5),
           experimental_activeTools: isReasoningModel
@@ -231,10 +282,7 @@ export async function POST(request: Request) {
           if (streamContext) {
             const streamId = generateId();
             await createStreamId({ streamId, chatId: id });
-            await streamContext.createNewResumableStream(
-              streamId,
-              () => sseStream
-            );
+            await streamContext.createNewResumableStream(streamId, () => sseStream);
           }
         } catch (_) {
           // ignore redis errors
