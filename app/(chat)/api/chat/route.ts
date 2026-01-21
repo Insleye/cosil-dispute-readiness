@@ -194,7 +194,10 @@ export async function POST(request: Request) {
           model: getLanguageModel(selectedChatModel),
           system: combinedSystemPrompt,
           messages: modelMessages,
-          stopWhen: stepCountIs(5),
+
+          // If you want to cap tool steps, uncomment this:
+          // stopWhen: stepCountIs(5),
+
           experimental_activeTools: isReasoningModel
             ? []
             : [
@@ -203,6 +206,7 @@ export async function POST(request: Request) {
                 "updateDocument",
                 "requestSuggestions",
               ],
+
           providerOptions: isReasoningModel
             ? {
                 anthropic: {
@@ -210,12 +214,14 @@ export async function POST(request: Request) {
                 },
               }
             : undefined,
+
           tools: {
             getWeather,
             createDocument: createDocument({ session, dataStream }),
             updateDocument: updateDocument({ session, dataStream }),
             requestSuggestions: requestSuggestions({ session, dataStream }),
           },
+
           experimental_telemetry: {
             isEnabled: isProductionEnvironment,
             functionId: "stream-text",
@@ -277,6 +283,7 @@ export async function POST(request: Request) {
         if (!process.env.REDIS_URL) {
           return;
         }
+
         try {
           const streamContext = getStreamContext();
           if (streamContext) {
