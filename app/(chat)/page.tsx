@@ -1,11 +1,11 @@
-import { cookies } from "next/headers";
-import { Suspense } from "react";
+"use client";
+
+import { Suspense, useState } from "react";
 import { Chat } from "@/components/chat";
 import { DataStreamHandler } from "@/components/data-stream-handler";
 import { DEFAULT_CHAT_MODEL } from "@/lib/ai/models";
 import { generateUUID } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { useState } from "react";
 
 const ROLE_OPTIONS = [
   "Tenant / Resident",
@@ -27,17 +27,17 @@ const COMPLAINT_STAGE_OPTIONS = [
 export default function Page() {
   return (
     <Suspense fallback={<div className="flex h-dvh" />}>
-      <NewChatPage />
+      <DisputeReadinessPage />
     </Suspense>
   );
 }
 
-function NewChatPage() {
+function DisputeReadinessPage() {
   const [userRole, setUserRole] = useState<string | null>(null);
   const [complaintStage, setComplaintStage] = useState<string | null>(null);
-  const id = generateUUID();
+  const chatId = generateUUID();
 
-  // STEP 1 — Role selection
+  // STEP 1 — ROLE SELECTION
   if (!userRole) {
     return (
       <div className="mx-auto mt-16 max-w-2xl px-4">
@@ -69,7 +69,7 @@ function NewChatPage() {
     );
   }
 
-  // STEP 2 — Complaint stage selection
+  // STEP 2 — COMPLAINT STAGE
   if (!complaintStage) {
     return (
       <div className="mx-auto mt-16 max-w-2xl px-4">
@@ -97,35 +97,14 @@ function NewChatPage() {
     );
   }
 
-  // STEP 3 — Load chat with forced context
-  return (
-    <ChatWithContext
-      id={id}
-      userRole={userRole}
-      complaintStage={complaintStage}
-    />
-  );
-}
-
-function ChatWithContext({
-  id,
-  userRole,
-  complaintStage,
-}: {
-  id: string;
-  userRole: string;
-  complaintStage: string;
-}) {
-  const cookieStore = cookies();
-  const modelIdFromCookie = cookieStore.get("chat-model");
-
+  // STEP 3 — LOAD CHAT WITH FORCED CONTEXT
   const initialMessages = [
     {
       id: generateUUID(),
-      role: "user",
+      role: "user" as const,
       parts: [
         {
-          type: "text",
+          type: "text" as const,
           text: `I am a ${userRole}. Complaint stage: ${complaintStage}. I need help with a dispute.`,
         },
       ],
@@ -136,14 +115,12 @@ function ChatWithContext({
     <>
       <Chat
         autoResume={false}
-        id={id}
-        initialChatModel={
-          modelIdFromCookie?.value || DEFAULT_CHAT_MODEL
-        }
+        id={chatId}
+        initialChatModel={DEFAULT_CHAT_MODEL}
         initialMessages={initialMessages}
         initialVisibilityType="private"
         isReadonly={false}
-        key={id}
+        key={chatId}
       />
       <DataStreamHandler />
     </>
