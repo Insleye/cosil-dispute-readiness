@@ -38,92 +38,122 @@ import { type PostRequestBody, postRequestBodySchema } from "./schema";
 
 export const maxDuration = 60;
 
+/**
+ * =========================
+ * COSIL SYSTEM INSTRUCTION
+ * =========================
+ */
 const COSIL_SYSTEM_ADDON = `
 You are Cosil Solutions Ltd, a UK-based strategic dispute consultancy and mediation practice.
 
-Mission:
-Help users stabilise disputes early, reduce escalation, and choose a sensible next step using practical, structured guidance.
+Who you support:
+- Tenants and leaseholders
+- Landlords and freeholders
+- Housing associations
+- Local authorities
+- Property and managing agents
+- Organisations handling complaints, escalation, or regulatory scrutiny
 
-Non-negotiable boundaries:
-- Do NOT provide legal advice.
-- Do NOT draft legal documents, pleadings, tribunal applications, or "how to win" strategies.
-- Do NOT give step-by-step procedural instructions for court/tribunal.
-- You MAY give general options, decision-making structure, and neutral wording for communication.
+Your role:
+Provide calm, structured, non-legal strategic guidance to help people:
+- Stabilise disputes early
+- Reduce escalation
+- Make informed decisions
+- Navigate complaints, breakdowns in communication, and risk
 
-Tone and format:
-- UK English.
+Hard boundaries:
+- You do NOT give legal advice.
+- You do NOT draft legal documents, pleadings, tribunal or court applications.
+- You do NOT give procedural “how to win” steps.
+- You do NOT cite legislation as instruction.
+- You MAY give strategic options, decision frameworks, evidence thinking, and neutral wording.
+
+Tone and style:
+- UK English only.
 - Short, clear sentences.
-- Calm, confident, practical.
-- Headings and bullets.
-- Ask before advising if details are missing.
+- Professional, calm, grounded.
+- No generic advice.
+- No moralising.
+- No assumptions.
 
-Core method (use this in thinking and output):
-R.E.S.O.L.V.E. = Research, Expert guidance, Dedicated support, Open communication, Leadership, Value, Empowerment.
+CRITICAL BEHAVIOUR RULE (THIS MATTERS):
+If the user asks a broad question and has not provided detail, you MUST pause and ask focused triage questions BEFORE advising.
 
-Default behaviour (this is the key change):
-If the user asks a broad question (eg "Should I go court?" "What do I do?") and they have not given details,
-ask 5 to 8 targeted triage questions BEFORE giving recommendations.
+Never jump straight to solutions unless context has been earned.
 
-Triage questions (pick the most relevant, do not ask all every time):
-- What outcome do you want (repair done, refund, apology, decision overturned, compensation, stop behaviour, move home)?
-- What steps have you already taken to resolve it informally?
-- Have you followed the organisation’s complaints process, what stage are you at, and what responses have you had?
-- Any deadlines, inspections, appointments, notices, vulnerability or safety risks?
-- What evidence do you already have (photos, dates, emails, logs, reference numbers)?
-- Who are the parties and decision-makers (landlord/HA/council/managing agent, contractor, neighbour)?
-- How long has this been going on and what has changed recently?
-- What would "good enough" look like in the next 14 days?
+Triage first. Always.
 
-Then provide guidance in this structure:
+Triage questions (ask 5–8, tailored, not all every time):
+- Who are the parties involved (tenant, leaseholder, landlord, HA, council, managing agent, contractor)?
+- What outcome do you actually want right now?
+- What steps have already been taken informally?
+- Has a formal complaints process been followed? If yes, what stage and response?
+- How long has this been going on?
+- What evidence exists (dates, emails, logs, photos, reference numbers)?
+- Are there any deadlines, inspections, risks, or vulnerabilities?
+- What would “good enough” look like in the next 14 days?
+
+ONLY AFTER triage, respond using this structure:
 
 1) Dispute snapshot
-- What’s happening (1 to 3 bullets)
-- What matters most (1 to 3 bullets)
+- What’s happening (1–3 bullets)
+- What matters most right now (1–3 bullets)
 
 2) First stabilising moves (next 48 hours)
-- 3 to 7 specific bullets based on their answers
-- Include: "log everything (dated)" and "keep comms in writing" where relevant
+- 3–7 actions
+- Always include: log everything, keep communications in writing
 
-3) Best next step pathway (choose one, explain why)
-- Informal resolution route (if early stage)
-- Formal complaint route (if not already done)
-- Independent escalation route (if complaint exhausted)
-- Mediation / facilitated conversation route (if relationships/comms breakdown)
-- Specialist advice route (if high-risk or complex)
+3) Best next step pathway (choose ONE and explain why)
+- Informal resolution
+- Formal complaint
+- Independent escalation
+- Mediation / facilitated discussion
+- Specialist advice (high-risk or complex only)
 
 4) Evidence checklist (tailored)
-- 6 to 12 bullets focused on decision trail, proof, and impact
+- 6–12 bullets
+- Focus on decision trail, proof, impact
 
-5) Suggested wording (only neutral, non-legal)
-- 4 to 8 lines max
+5) Suggested wording (optional, neutral, non-legal)
+- 4–8 lines max
+- Clear ask, clear timeframe
 - No threats, no legal citations
-- Aim: clarity, timeline, ask for a specific action and timeframe
 
-Close every answer with:
+Mandatory close on every answer:
 "Note: This is general strategic guidance, not legal advice."
 
-Hard rules:
-- If user mentions immediate danger, threats, violence, fire, gas, or serious disrepair risk: tell them to contact emergency services or urgent services immediately.
-- If user asks for legal drafting or legal advice: refuse that part and pivot to strategic options and questions to take to a solicitor/adviser.
+Safety rule:
+If the user mentions immediate danger, serious disrepair, gas, fire, threats, or harm:
+Tell them to contact emergency or urgent services immediately before anything else.
 `.trim();
 
+/**
+ * =========================
+ * STREAM CONTEXT
+ * =========================
+ */
 function getStreamContext() {
   try {
     return createResumableStreamContext({ waitUntil: after });
-  } catch (_) {
+  } catch {
     return null;
   }
 }
 
 export { getStreamContext };
 
+/**
+ * =========================
+ * POST HANDLER
+ * =========================
+ */
 export async function POST(request: Request) {
   let requestBody: PostRequestBody;
 
   try {
     const json = await request.json();
     requestBody = postRequestBodySchema.parse(json);
-  } catch (_) {
+  } catch {
     return new ChatSDKError("bad_request:api").toResponse();
   }
 
@@ -132,7 +162,6 @@ export async function POST(request: Request) {
       requestBody;
 
     const session = await auth();
-
     if (!session?.user) {
       return new ChatSDKError("unauthorized:chat").toResponse();
     }
@@ -149,8 +178,8 @@ export async function POST(request: Request) {
     }
 
     const isToolApprovalFlow = Boolean(messages);
-
     const chat = await getChatById({ id });
+
     let messagesFromDb: DBMessage[] = [];
     let titlePromise: Promise<string> | null = null;
 
@@ -199,10 +228,6 @@ export async function POST(request: Request) {
       });
     }
 
-    const isReasoningModel =
-      selectedChatModel.includes("reasoning") ||
-      selectedChatModel.includes("thinking");
-
     const modelMessages = await convertToModelMessages(uiMessages);
 
     const combinedSystemPrompt = `${systemPrompt({
@@ -212,78 +237,35 @@ export async function POST(request: Request) {
 
     const stream = createUIMessageStream({
       originalMessages: isToolApprovalFlow ? uiMessages : undefined,
-      execute: async ({ writer: dataStream }) => {
+      execute: async ({ writer }) => {
         const result = streamText({
           model: getLanguageModel(selectedChatModel),
           system: combinedSystemPrompt,
           messages: modelMessages,
           stopWhen: stepCountIs(5),
-          experimental_activeTools: isReasoningModel
-            ? []
-            : [
-                "getWeather",
-                "createDocument",
-                "updateDocument",
-                "requestSuggestions",
-              ],
-          providerOptions: isReasoningModel
-            ? {
-                anthropic: {
-                  thinking: { type: "enabled", budgetTokens: 10_000 },
-                },
-              }
-            : undefined,
-          tools: {
-            getWeather,
-            createDocument: createDocument({ session, dataStream }),
-            updateDocument: updateDocument({ session, dataStream }),
-            requestSuggestions: requestSuggestions({ session, dataStream }),
-          },
+          experimental_activeTools: [],
           experimental_telemetry: {
             isEnabled: isProductionEnvironment,
-            functionId: "stream-text",
+            functionId: "cosil-chat",
           },
         });
 
-        dataStream.merge(result.toUIMessageStream());
+        writer.merge(result.toUIMessageStream());
 
         if (titlePromise) {
           const title = await titlePromise;
-          dataStream.write({ type: "data-chat-title", data: title });
+          writer.write({ type: "data-chat-title", data: title });
           updateChatTitleById({ chatId: id, title });
         }
       },
       generateId: generateUUID,
       onFinish: async ({ messages: finishedMessages }) => {
-        if (isToolApprovalFlow) {
-          for (const finishedMsg of finishedMessages) {
-            const existingMsg = uiMessages.find((m) => m.id === finishedMsg.id);
-            if (existingMsg) {
-              await updateMessage({
-                id: finishedMsg.id,
-                parts: finishedMsg.parts,
-              });
-            } else {
-              await saveMessages({
-                messages: [
-                  {
-                    id: finishedMsg.id,
-                    role: finishedMsg.role,
-                    parts: finishedMsg.parts,
-                    createdAt: new Date(),
-                    attachments: [],
-                    chatId: id,
-                  },
-                ],
-              });
-            }
-          }
-        } else if (finishedMessages.length > 0) {
+        if (finishedMessages.length > 0) {
           await saveMessages({
-            messages: finishedMessages.map((currentMessage) => ({
-              id: currentMessage.id,
-              role: currentMessage.role,
-              parts: currentMessage.parts,
+            messages: finishedMessages.map((m) => ({
+              id: m.id,
+              role: m.role,
+              parts: m.parts,
               createdAt: new Date(),
               attachments: [],
               chatId: id,
@@ -291,48 +273,40 @@ export async function POST(request: Request) {
           });
         }
       },
-      onError: () => "Oops, an error occurred!",
+      onError: () => "An error occurred.",
     });
 
     return createUIMessageStreamResponse({
       stream,
       async consumeSseStream({ stream: sseStream }) {
-        if (!process.env.REDIS_URL) {
-          return;
-        }
+        if (!process.env.REDIS_URL) return;
         try {
-          const streamContext = getStreamContext();
-          if (streamContext) {
+          const ctx = getStreamContext();
+          if (ctx) {
             const streamId = generateId();
             await createStreamId({ streamId, chatId: id });
-            await streamContext.createNewResumableStream(streamId, () => sseStream);
+            await ctx.createNewResumableStream(streamId, () => sseStream);
           }
-        } catch (_) {
-          // ignore redis errors
+        } catch {
+          // ignore
         }
       },
     });
   } catch (error) {
-    const vercelId = request.headers.get("x-vercel-id");
-
     if (error instanceof ChatSDKError) {
       return error.toResponse();
     }
 
-    if (
-      error instanceof Error &&
-      error.message?.includes(
-        "AI Gateway requires a valid credit card on file to service requests"
-      )
-    ) {
-      return new ChatSDKError("bad_request:activate_gateway").toResponse();
-    }
-
-    console.error("Unhandled error in chat API:", error, { vercelId });
+    console.error("Chat error:", error);
     return new ChatSDKError("offline:chat").toResponse();
   }
 }
 
+/**
+ * =========================
+ * DELETE HANDLER
+ * =========================
+ */
 export async function DELETE(request: Request) {
   const { searchParams } = new URL(request.url);
   const id = searchParams.get("id");
@@ -342,18 +316,15 @@ export async function DELETE(request: Request) {
   }
 
   const session = await auth();
-
   if (!session?.user) {
     return new ChatSDKError("unauthorized:chat").toResponse();
   }
 
   const chat = await getChatById({ id });
-
   if (chat?.userId !== session.user.id) {
     return new ChatSDKError("forbidden:chat").toResponse();
   }
 
   const deletedChat = await deleteChatById({ id });
-
   return Response.json(deletedChat, { status: 200 });
 }
