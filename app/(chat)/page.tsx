@@ -17,6 +17,13 @@ const ROLE_OPTIONS = [
   "Local Authority",
 ];
 
+const COMPLAINT_STAGE_OPTIONS = [
+  "No, I have not raised a formal complaint",
+  "Yes, complaint raised but no response yet",
+  "Yes, complaint responded to but unresolved",
+  "Yes, complaint exhausted / final response received",
+];
+
 export default function Page() {
   return (
     <Suspense fallback={<div className="flex h-dvh" />}>
@@ -27,9 +34,10 @@ export default function Page() {
 
 function NewChatPage() {
   const [userRole, setUserRole] = useState<string | null>(null);
+  const [complaintStage, setComplaintStage] = useState<string | null>(null);
   const id = generateUUID();
 
-  // STEP 1 — Force role selection
+  // STEP 1 — Role selection
   if (!userRole) {
     return (
       <div className="mx-auto mt-16 max-w-2xl px-4">
@@ -61,16 +69,52 @@ function NewChatPage() {
     );
   }
 
-  // STEP 2 — Load chat with role injected as first message
-  return <ChatWithRole id={id} userRole={userRole} />;
+  // STEP 2 — Complaint stage selection
+  if (!complaintStage) {
+    return (
+      <div className="mx-auto mt-16 max-w-2xl px-4">
+        <h1 className="mb-2 text-2xl font-semibold">
+          Complaint stage check
+        </h1>
+
+        <p className="mb-6 text-zinc-500">
+          Where are you currently in the complaints process?
+        </p>
+
+        <div className="grid gap-3">
+          {COMPLAINT_STAGE_OPTIONS.map((stage) => (
+            <Button
+              key={stage}
+              variant="outline"
+              className="justify-start"
+              onClick={() => setComplaintStage(stage)}
+            >
+              {stage}
+            </Button>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  // STEP 3 — Load chat with forced context
+  return (
+    <ChatWithContext
+      id={id}
+      userRole={userRole}
+      complaintStage={complaintStage}
+    />
+  );
 }
 
-function ChatWithRole({
+function ChatWithContext({
   id,
   userRole,
+  complaintStage,
 }: {
   id: string;
   userRole: string;
+  complaintStage: string;
 }) {
   const cookieStore = cookies();
   const modelIdFromCookie = cookieStore.get("chat-model");
@@ -82,7 +126,7 @@ function ChatWithRole({
       parts: [
         {
           type: "text",
-          text: `I am a ${userRole}. I need help with a dispute.`,
+          text: `I am a ${userRole}. Complaint stage: ${complaintStage}. I need help with a dispute.`,
         },
       ],
     },
