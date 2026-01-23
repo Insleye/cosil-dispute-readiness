@@ -6,18 +6,16 @@ import { DEFAULT_CHAT_MODEL } from "@/lib/ai/models";
 export default function Page() {
   return (
     <Suspense fallback={<div className="flex h-dvh" />}>
-      <ServerWrapper />
+      <NewChatPage />
     </Suspense>
   );
 }
 
-async function ServerWrapper() {
+async function NewChatPage() {
   const cookieStore = await cookies();
-  const modelIdFromCookie = cookieStore.get("chat-model")?.value;
+  const modelIdFromCookie = cookieStore.get("chat-model");
 
-  return (
-    <DisputeReadinessGate
-      initialChatModel={modelIdFromCookie || DEFAULT_CHAT_MODEL}
-    />
-  );
+  const initialChatModel = modelIdFromCookie?.value || DEFAULT_CHAT_MODEL;
+
+  return <DisputeReadinessGate initialChatModel={initialChatModel} />;
 }
