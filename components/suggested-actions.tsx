@@ -14,34 +14,50 @@ type SuggestedActionsProps = {
 };
 
 function PureSuggestedActions({ chatId, sendMessage }: SuggestedActionsProps) {
-  const suggestedActions = [
-  "A complaint is escalating, what should we stabilise first?",
-  "Ombudsman pressure, what evidence should we pull together?",
-  "Is mediation appropriate right now, or is it too early?",
-  "Service charge dispute, how do we reduce risk and repetition?",
-];
+  const segments = [
+    {
+      label: "Tenant / Resident",
+      message:
+        "Role: Tenant or resident. Please start by asking me your triage questions. My issue is:",
+    },
+    {
+      label: "Leaseholder",
+      message:
+        "Role: Leaseholder. Please start by asking me your triage questions. My issue is:",
+    },
+    {
+      label: "Landlord / Freeholder",
+      message:
+        "Role: Landlord or freeholder. Please start by asking me your triage questions. My issue is:",
+    },
+    {
+      label: "Organisation (HA, LA, Managing Agent)",
+      message:
+        "Role: Organisation (housing association, local authority, or managing agent). Please start by asking me your triage questions. The case is about:",
+    },
+  ];
 
-
-   return (
+  return (
     <>
       <div className="mb-3 text-sm text-zinc-500">
-       Start your Dispute Readiness Check:
+        Start by choosing what best describes you:
       </div>
 
       <div
         className="grid w-full gap-2 sm:grid-cols-2"
         data-testid="suggested-actions"
       >
-        {suggestedActions.map((suggestedAction, index) => (
+        {segments.map((segment, index) => (
           <motion.div
+            key={segment.label}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 20 }}
             initial={{ opacity: 0, y: 20 }}
-            key={suggestedAction}
             transition={{ delay: 0.05 * index }}
           >
             <Suggestion
               className="h-auto w-full whitespace-normal p-3 text-left"
+              suggestion={segment.message}
               onClick={(suggestion) => {
                 window.history.pushState({}, "", `/chat/${chatId}`);
                 sendMessage({
@@ -49,12 +65,15 @@ function PureSuggestedActions({ chatId, sendMessage }: SuggestedActionsProps) {
                   parts: [{ type: "text", text: suggestion }],
                 });
               }}
-              suggestion={suggestedAction}
             >
-              {suggestedAction}
+              {segment.label}
             </Suggestion>
           </motion.div>
         ))}
+      </div>
+
+      <div className="mt-3 text-xs text-zinc-500">
+        Tip: Click your role, then add one short sentence to complete the line.
       </div>
     </>
   );
@@ -63,14 +82,9 @@ function PureSuggestedActions({ chatId, sendMessage }: SuggestedActionsProps) {
 export const SuggestedActions = memo(
   PureSuggestedActions,
   (prevProps, nextProps) => {
-    if (prevProps.chatId !== nextProps.chatId) {
+    if (prevProps.chatId !== nextProps.chatId) return false;
+    if (prevProps.selectedVisibilityType !== nextProps.selectedVisibilityType)
       return false;
-    }
-    if (prevProps.selectedVisibilityType !== nextProps.selectedVisibilityType) {
-      return false;
-    }
-
     return true;
   }
 );
-
