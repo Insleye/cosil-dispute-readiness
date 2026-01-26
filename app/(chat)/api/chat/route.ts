@@ -1,4 +1,3 @@
-import { geolocation } from "@vercel/functions";
 import {
   convertToModelMessages,
   createUIMessageStream,
@@ -37,7 +36,7 @@ import { generateTitleFromUserMessage } from "../../actions";
 import { type PostRequestBody, postRequestBodySchema } from "./schema";
 
 export const runtime = "nodejs";
-
+export const maxDuration = 60;
 
 /**
  * COSIL BOT SYSTEM ADDON
@@ -180,6 +179,26 @@ function getStreamContext() {
 
 export { getStreamContext };
 
+function getRequestHints(request: Request): RequestHints {
+  const h = request.headers;
+
+  const city = h.get("x-vercel-ip-city") ?? undefined;
+  const country = h.get("x-vercel-ip-country") ?? undefined;
+
+  const latitudeRaw = h.get("x-vercel-ip-latitude");
+  const longitudeRaw = h.get("x-vercel-ip-longitude");
+
+  const latitude = latitudeRaw ? Number(latitudeRaw) : undefined;
+  const longitude = longitudeRaw ? Number(longitudeRaw) : undefined;
+
+  return {
+    city,
+    country,
+    latitude: Number.isFinite(latitude) ? latitude : undefined,
+    longitude: Number.isFinite(longitude) ? longitude : undefined,
+  };
+}
+
 export async function POST(request: Request) {
   let requestBody: PostRequestBody;
 
@@ -238,14 +257,7 @@ export async function POST(request: Request) {
       ? (messages as ChatMessage[])
       : [...convertToUIMessages(messagesFromDb), message as ChatMessage];
 
-    const { longitude, latitude, city, country } = geolocation(request);
-
-    const requestHints: RequestHints = {
-      longitude,
-      latitude,
-      city,
-      country,
-    };
+    const requestHints: RequestHints = getRequestHints(request);
 
     if (message?.role === "user") {
       await saveMessages({
@@ -368,10 +380,7 @@ export async function POST(request: Request) {
           if (streamContext) {
             const streamId = generateId();
             await createStreamId({ streamId, chatId: id });
-            await streamContext.createNewResumableStream(
-              streamId,
-              () => sseStream
-            );
+            await streamContext.createNewResumableStream(streamId, () => sseStream);
           }
         } catch (_) {
           // ignore redis errors
