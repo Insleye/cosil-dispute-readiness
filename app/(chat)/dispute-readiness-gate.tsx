@@ -14,31 +14,37 @@ const ROLE_OPTIONS = [
   "Managing Agent / Property Manager",
   "Housing Association",
   "Local Authority",
-];
+] as const;
 
 const COMPLAINT_STAGE_OPTIONS = [
   "No, I have not raised a formal complaint",
   "Yes, complaint raised but no response yet",
   "Yes, complaint responded to but unresolved",
   "Yes, complaint exhausted / final response received",
-];
+] as const;
 
-export default function DisputeReadinessGate({
-  initialChatModel,
-}: {
+type Props = {
   initialChatModel: string;
-}) {
-  const [userRole, setUserRole] = useState<string | null>(null);
-  const [complaintStage, setComplaintStage] = useState<string | null>(null);
+};
+
+export default function DisputeReadinessGate({ initialChatModel }: Props) {
+  const [userRole, setUserRole] = useState<(typeof ROLE_OPTIONS)[number] | null>(
+    null
+  );
+  const [complaintStage, setComplaintStage] = useState<
+    (typeof COMPLAINT_STAGE_OPTIONS)[number] | null
+  >(null);
 
   const chatId = useMemo(() => generateUUID(), []);
 
+  // Step 1: role
   if (!userRole) {
     return (
       <div className="mx-auto mt-16 max-w-2xl px-4">
         <h1 className="mb-2 text-2xl font-semibold">Dispute Readiness Check</h1>
+
         <p className="mb-6 text-zinc-500">
-          To give you the right guidance, first tell us which best describes you.
+          To give you the right guidance, tell us which best describes you.
         </p>
 
         <div className="grid gap-3">
@@ -61,10 +67,12 @@ export default function DisputeReadinessGate({
     );
   }
 
+  // Step 2: complaint stage
   if (!complaintStage) {
     return (
       <div className="mx-auto mt-16 max-w-2xl px-4">
         <h1 className="mb-2 text-2xl font-semibold">Complaint stage check</h1>
+
         <p className="mb-6 text-zinc-500">
           Where are you currently in the complaints process?
         </p>
@@ -81,10 +89,21 @@ export default function DisputeReadinessGate({
             </Button>
           ))}
         </div>
+
+        <div className="mt-6">
+          <Button
+            variant="ghost"
+            className="px-0 text-sm text-zinc-500 hover:bg-transparent"
+            onClick={() => setUserRole(null)}
+          >
+            Back
+          </Button>
+        </div>
       </div>
     );
   }
 
+  // Step 3: open chat with forced context
   const initialMessages = [
     {
       id: generateUUID(),
@@ -92,7 +111,7 @@ export default function DisputeReadinessGate({
       parts: [
         {
           type: "text",
-          text: `I am a ${userRole}. Complaint stage: ${complaintStage}. I need help with a dispute.`,
+          text: `Role: ${userRole}\nComplaint stage: ${complaintStage}\nWhat I need help with: (I will explain next).`,
         },
       ],
     },
