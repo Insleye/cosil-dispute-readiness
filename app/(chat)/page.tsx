@@ -15,7 +15,7 @@ async function NewChatPage() {
   const cookieStore = await cookies();
   const modelIdFromCookie = cookieStore.get("chat-model");
 
-  const initialChatModel = modelIdFromCookie?.value || DEFAULT_CHAT_MODEL;
+  const initialChatModel = modelIdFromCookie?.value ?? DEFAULT_CHAT_MODEL;
 
   return <DisputeReadinessGate initialChatModel={initialChatModel} />;
 }
