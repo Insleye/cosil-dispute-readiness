@@ -94,18 +94,15 @@ export function NewChatPage() {
   }
 
   // STEP 3 — Show chat with context
-  const initialSystemContext = `User role: ${userRole}\nComplaint stage: ${complaintStage}`;
-
   return (
     <>
       <Chat
-        key={id}
         id={id}
         initialMessages={[]}
-        selectedChatModel={DEFAULT_CHAT_MODEL}
-        selectedVisibilityType="private"
+        initialChatModel={DEFAULT_CHAT_MODEL}
+        initialVisibilityType="private"
         isReadonly={false}
-        systemContext={initialSystemContext}
+        autoResume={false}
       />
       <DataStreamHandler id={id} />
     </>
