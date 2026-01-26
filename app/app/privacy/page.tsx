@@ -1,62 +1,128 @@
-export const metadata = {
-  title: "Privacy Notice | Cosil Solutions Ltd",
-};
+"use client";
 
-export default function Page() {
+import { useMemo, useState } from "react";
+import { Chat } from "@/components/chat";
+import { DataStreamHandler } from "@/components/data-stream-handler";
+import { Button } from "@/components/ui/button";
+import { generateUUID } from "@/lib/utils";
+
+const ROLE_OPTIONS = [
+  "Tenant / Resident",
+  "Leaseholder",
+  "Landlord",
+  "Freeholder",
+  "Managing Agent / Property Manager",
+  "Housing Association",
+  "Local Authority",
+];
+
+const COMPLAINT_STAGE_OPTIONS = [
+  "No, I have not raised a formal complaint",
+  "Yes, complaint raised but no response yet",
+  "Yes, complaint responded to but unresolved",
+  "Yes, complaint exhausted / final response received",
+];
+
+export default function DisputeReadinessGate({
+  initialChatModel,
+}: {
+  initialChatModel: string;
+}) {
+  const [userRole, setUserRole] = useState<string | null>(null);
+  const [complaintStage, setComplaintStage] = useState<string | null>(null);
+
+  const chatId = useMemo(() => generateUUID(), []);
+
+  if (!userRole) {
+    return (
+      <div className="mx-auto mt-16 max-w-2xl px-4">
+        <h1 className="mb-2 text-2xl font-semibold">Dispute Readiness Check</h1>
+        <p className="mb-6 text-zinc-500">
+          To give you the right guidance, first tell us which best describes you.
+        </p>
+
+        <div className="grid gap-3">
+          {ROLE_OPTIONS.map((role) => (
+            <Button
+              key={role}
+              variant="outline"
+              className="justify-start"
+              onClick={() => setUserRole(role)}
+            >
+              {role}
+            </Button>
+          ))}
+        </div>
+
+        <p className="mt-6 text-xs text-zinc-400">
+          This tool provides general strategic guidance, not legal advice.
+          If you need tailored support, contact Cosil Solutions Ltd on{" "}
+          <a className="underline" href="tel:07587065611">
+            07587 065 611
+          </a>
+          .
+        </p>
+      </div>
+    );
+  }
+
+  if (!complaintStage) {
+    return (
+      <div className="mx-auto mt-16 max-w-2xl px-4">
+        <h1 className="mb-2 text-2xl font-semibold">Complaint stage check</h1>
+        <p className="mb-6 text-zinc-500">
+          Where are you currently in the complaints process?
+        </p>
+
+        <div className="grid gap-3">
+          {COMPLAINT_STAGE_OPTIONS.map((stage) => (
+            <Button
+              key={stage}
+              variant="outline"
+              className="justify-start"
+              onClick={() => setComplaintStage(stage)}
+            >
+              {stage}
+            </Button>
+          ))}
+        </div>
+
+        <p className="mt-6 text-xs text-zinc-400">
+          If you need tailored support, contact Cosil Solutions Ltd on{" "}
+          <a className="underline" href="tel:07587065611">
+            07587 065 611
+          </a>
+          .
+        </p>
+      </div>
+    );
+  }
+
+  const initialMessages = [
+    {
+      id: generateUUID(),
+      role: "user",
+      parts: [
+        {
+          type: "text",
+          text: `I am a ${userRole}. Complaint stage: ${complaintStage}. I need help with a dispute.`,
+        },
+      ],
+    },
+  ];
+
   return (
-    <main>
-      <h1>Privacy Notice</h1>
-      <p>Cosil Solutions Ltd, Dispute Readiness Check</p>
-
-      <h2>Who we are</h2>
-      <p>
-        Cosil Solutions Ltd is a UK-based strategic dispute consultancy and civil
-        and commercial mediation practice.
-      </p>
-
-      <h2>What we collect</h2>
-      <ul>
-        <li>Your role selection</li>
-        <li>Your complaint stage selection</li>
-        <li>Messages you type into the chat</li>
-        <li>Files you upload, if you choose to upload them</li>
-      </ul>
-
-      <h2>How we use your information</h2>
-      <ul>
-        <li>To provide structured guidance based on what you share</li>
-        <li>To ask triage questions to reduce generic responses</li>
-        <li>To support basic app functionality and chat continuity</li>
-      </ul>
-
-      <h2>What we do not do</h2>
-      <ul>
-        <li>We do not sell your data</li>
-        <li>We do not use your data for advertising</li>
-        <li>We do not publish your messages or files</li>
-      </ul>
-
-      <h2>File uploads</h2>
-      <p>
-        If you upload files, they are handled only to support your request. Do
-        not upload highly sensitive information unless essential.
-      </p>
-
-      <h2>Your rights</h2>
-      <p>
-        You have rights under UK data protection law, including the right to
-        request access to, correction of, or deletion of your personal data,
-        subject to legal and operational limits.
-      </p>
-
-      <h2>Contact</h2>
-      <p>Email: admin@cosilsolution.co.uk</p>
-      <p>Phone: 0207 458 4707 or 07587 065511</p>
-
-      <p>
-        Note: This tool provides general strategic guidance. It does not provide
-        legal advice.
-      </p>
-    </main>
+    <>
+      <Chat
+        autoResume={false}
+        id={chatId}
+        initialChatModel={initialChatModel}
+        initialMessages={initialMessages}
+        initialVisibilityType="private"
+        isReadonly={false}
+        key={chatId}
+      />
+      <DataStreamHandler />
+    </>
   );
 }
