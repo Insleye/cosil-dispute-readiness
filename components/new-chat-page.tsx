@@ -104,7 +104,7 @@ export function NewChatPage() {
         isReadonly={false}
         autoResume={false}
       />
-      <DataStreamHandler id={id} />
+      <DataStreamHandler />
     </>
   );
 }
