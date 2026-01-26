@@ -107,10 +107,10 @@ export default function DisputeReadinessGate({ initialChatModel }: Props) {
   const initialMessages = [
     {
       id: generateUUID(),
-      role: "user",
+      role: "user" as const,
       parts: [
         {
-          type: "text",
+          type: "text" as const,
           text: `Role: ${userRole}\nComplaint stage: ${complaintStage}\nWhat I need help with: (I will explain next).`,
         },
       ],
