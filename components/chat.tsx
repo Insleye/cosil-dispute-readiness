@@ -3,7 +3,7 @@
 import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport } from "ai";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import useSWR, { useSWRConfig } from "swr";
 import { unstable_serialize } from "swr/infinite";
 import { ChatHeader } from "@/components/chat-header";
@@ -17,6 +17,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { Button } from "@/components/ui/button";
 import { useArtifactSelector } from "@/hooks/use-artifact";
 import { useAutoResume } from "@/hooks/use-auto-resume";
 import { useChatVisibility } from "@/hooks/use-chat-visibility";
@@ -31,6 +32,63 @@ import { MultimodalInput } from "./multimodal-input";
 import { getChatHistoryPaginationKey } from "./sidebar-history";
 import { toast } from "./toast";
 import type { VisibilityType } from "./visibility-selector";
+
+type RiskTier = "LOW" | "ESCALATING" | "HIGH" | null;
+
+function extractTextFromMessage(msg: ChatMessage | undefined): string {
+  if (!msg?.parts?.length) return "";
+  return msg.parts
+    .map((p: any) => (p?.type === "text" && typeof p.text === "string" ? p.text : ""))
+    .filter(Boolean)
+    .join("\n");
+}
+
+/**
+ * Tier detection strategy:
+ * 1) Preferred: [COSIL_TIER: HIGH|ESCALATING|LOW]
+ * 2) Fallback: parse the structured output you forced (Tier section)
+ * 3) Extra fallback: look for "HIGH RISK" etc near the start
+ */
+function detectTierFromAssistantText(textRaw: string): RiskTier {
+  const text = (textRaw || "").trim();
+
+  // 1) Marker pattern
+  const marker = text.match(/\[COSIL_TIER:\s*(LOW|ESCALATING|HIGH)\s*\]/i);
+  if (marker?.[1]) return marker[1].toUpperCase() as RiskTier;
+
+  // 2) "Tier" section (your forced structure)
+  // examples: "Tier\nHIGH RISK" or "Tier: HIGH RISK"
+  const tierLine =
+    text.match(/^\s*Tier\s*[:\n]\s*(LOW RISK|ESCALATING|HIGH RISK)\s*$/im)?.[1] ??
+    text.match(/^\s*Tier\s*[:\n]\s*(LOW|ESCALATING|HIGH)\s*$/im)?.[1];
+
+  if (tierLine) {
+    const t = tierLine.toUpperCase();
+    if (t.includes("HIGH")) return "HIGH";
+    if (t.includes("ESCALATING")) return "ESCALATING";
+    if (t.includes("LOW")) return "LOW";
+  }
+
+  // 3) Extra fallback
+  const head = text.slice(0, 400).toUpperCase();
+  if (head.includes("HIGH RISK")) return "HIGH";
+  if (head.includes("ESCALATING")) return "ESCALATING";
+  if (head.includes("LOW RISK")) return "LOW";
+
+  return null;
+}
+
+function getLatestAssistantTier(messages: ChatMessage[]): RiskTier {
+  for (let i = messages.length - 1; i >= 0; i -= 1) {
+    const m = messages[i];
+    if (m?.role === "assistant") {
+      const text = extractTextFromMessage(m);
+      const tier = detectTierFromAssistantText(text);
+      if (tier) return tier;
+    }
+  }
+  return null;
+}
 
 export function Chat({
   id,
@@ -59,13 +117,13 @@ export function Chat({
   // Handle browser back/forward navigation
   useEffect(() => {
     const handlePopState = () => {
-      // When user navigates back/forward, refresh to sync with URL
       router.refresh();
     };
 
     window.addEventListener("popstate", handlePopState);
     return () => window.removeEventListener("popstate", handlePopState);
   }, [router]);
+
   const { setDataStream } = useDataStream();
 
   const [input, setInput] = useState<string>("");
@@ -112,9 +170,7 @@ export function Chat({
           request.messages.some((msg) =>
             msg.parts?.some((part) => {
               const state = (part as { state?: string }).state;
-              return (
-                state === "approval-responded" || state === "output-denied"
-              );
+              return state === "approval-responded" || state === "output-denied";
             })
           );
 
@@ -139,9 +195,7 @@ export function Chat({
     },
     onError: (error) => {
       if (error instanceof ChatSDKError) {
-        if (
-          error.message?.includes("AI Gateway requires a valid credit card")
-        ) {
+        if (error.message?.includes("AI Gateway requires a valid credit card")) {
           setShowCreditCardAlert(true);
         } else {
           toast({
@@ -155,7 +209,6 @@ export function Chat({
 
   const searchParams = useSearchParams();
   const query = searchParams.get("query");
-
   const [hasAppendedQuery, setHasAppendedQuery] = useState(false);
 
   useEffect(() => {
@@ -185,6 +238,21 @@ export function Chat({
     setMessages,
   });
 
+  // --- Tier-based CTA block (UI-led escalation) ---
+  const readinessTier: RiskTier = useMemo(() => {
+    return getLatestAssistantTier(messages);
+  }, [messages]);
+
+  const isEscalationVisible = readinessTier === "HIGH" || readinessTier === "ESCALATING";
+
+  const contactUrl = "https://cosilsolutions.co.uk/contact/";
+  const readinessUrl =
+    "https://cosilsolutions.co.uk/dispute-readiness-check-for-property-housing-disputes/";
+
+  const mailto = "mailto:admin@cosilsolution.co.uk";
+  const telMain = "tel:+442074584707";
+  const telMobile = "tel:+447587065511";
+
   return (
     <>
       <div className="overscroll-behavior-contain flex h-dvh min-w-0 touch-pan-y flex-col bg-background">
@@ -206,6 +274,77 @@ export function Chat({
           status={status}
           votes={votes}
         />
+
+        {/* Tier-based escalation block (appears only after assistant produces a tier) */}
+        {isEscalationVisible && (
+          <div className="mx-auto w-full max-w-4xl px-2 pb-2 md:px-4">
+            <div className="rounded-lg border bg-background p-3">
+              <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+                <div className="text-sm">
+                  <div className="font-medium">
+                    {readinessTier === "HIGH"
+                      ? "Time-critical support recommended"
+                      : "Optional support to prevent escalation"}
+                  </div>
+                  <div className="mt-1 text-zinc-500">
+                    {readinessTier === "HIGH"
+                      ? "If you want structured help to regain control quickly, you can contact Cosil now."
+                      : "If you want a structured review and next-step plan, you can request support."}
+                  </div>
+                </div>
+
+                <div className="flex flex-wrap gap-2">
+                  {readinessTier === "HIGH" ? (
+                    <>
+                      <Button
+                        onClick={() => window.open(contactUrl, "_blank")}
+                      >
+                        Contact Cosil
+                      </Button>
+                      <Button
+                        variant="outline"
+                        onClick={() => window.open(readinessUrl, "_blank")}
+                      >
+                        Review options
+                      </Button>
+                    </>
+                  ) : (
+                    <>
+                      <Button
+                        onClick={() => window.open(contactUrl, "_blank")}
+                      >
+                        Request a dispute review
+                      </Button>
+                      <Button
+                        variant="outline"
+                        onClick={() => window.open(readinessUrl, "_blank")}
+                      >
+                        Readiness page
+                      </Button>
+                    </>
+                  )}
+
+                  <Button
+                    variant="ghost"
+                    onClick={() => window.location.href = mailto}
+                  >
+                    Email
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    onClick={() => (window.location.href = telMain)}
+                  >
+                    Call
+                  </Button>
+                </div>
+              </div>
+
+              <div className="mt-2 text-xs text-zinc-500">
+                admin@cosilsolution.co.uk · 0207 458 4707 · 07587 065511
+              </div>
+            </div>
+          </div>
+        )}
 
         <div className="sticky bottom-0 z-1 mx-auto flex w-full max-w-4xl gap-2 border-t-0 bg-background px-2 pb-3 md:px-4 md:pb-4">
           {!isReadonly && (
