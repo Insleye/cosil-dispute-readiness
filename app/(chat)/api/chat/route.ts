@@ -41,7 +41,7 @@ export const maxDuration = 60;
 function getStreamContext() {
   try {
     return createResumableStreamContext({ waitUntil: after });
-  } catch (_) {
+  } catch {
     return null;
   }
 }
@@ -54,7 +54,7 @@ export async function POST(request: Request) {
   try {
     const json = await request.json();
     requestBody = postRequestBodySchema.parse(json);
-  } catch (_) {
+  } catch {
     return new ChatSDKError("bad_request:api").toResponse();
   }
 
@@ -142,7 +142,6 @@ export async function POST(request: Request) {
         const result = streamText({
           model: getLanguageModel(selectedChatModel),
 
-          // 🔒 CRITICAL CHANGE: force deterministic tier marker
           system: `${systemPrompt({ selectedChatModel, requestHints })}
 
 CRITICAL OUTPUT RULES (NON-NEGOTIABLE):
@@ -151,8 +150,30 @@ CRITICAL OUTPUT RULES (NON-NEGOTIABLE):
    [COSIL_TIER: ESCALATING]
    [COSIL_TIER: HIGH]
 2) Do not place anything before the tier line.
-3) After the tier line, continue with clear, structured, UK property and housing dispute guidance.
-4) Provide strategic guidance only. Do not give legal advice.`,
+
+TIER DEFINITIONS:
+- HIGH: tribunal or court hearing within 14 days, urgent deadlines, eviction risk, injunctions, safeguarding, severe disrepair risk, or serious financial exposure.
+- ESCALATING: complaint unresolved, final response received, ombudsman or pre-action being considered.
+- LOW: early-stage enquiry, no active deadlines.
+
+RESPONSE STRUCTURE (AFTER THE TIER LINE):
+A) One sentence explaining what this means.
+B) “Next 24–48 hours” checklist (3–6 bullets).
+C) “What to gather now” checklist (3–6 bullets).
+D) Clear escalation route.
+
+ESCALATION RULE (HIGH ONLY):
+- Do NOT default to drafting letters.
+- Do NOT ask for long address details.
+- You MUST recommend involving Cosil Solutions immediately.
+- Provide calm, practical, strategic guidance only. No legal advice.
+
+When tier is HIGH, include this exact block at the end:
+
+"Need help urgently?
+Cosil Solutions Ltd can review your position quickly and help you prepare, organise evidence, and decide next steps.
+Email: admin@cosilsolution.co.uk
+Call: 0207 458 4707 or 07587065511"`,
 
           messages: modelMessages,
           stopWhen: stepCountIs(5),
@@ -229,15 +250,13 @@ CRITICAL OUTPUT RULES (NON-NEGOTIABLE):
           });
         }
       },
-      onError: () => "Oops, an error occurred!",
+      onError: () => "An error occurred.",
     });
 
     return createUIMessageStreamResponse({
       stream,
       async consumeSseStream({ stream: sseStream }) {
-        if (!process.env.REDIS_URL) {
-          return;
-        }
+        if (!process.env.REDIS_URL) return;
         try {
           const streamContext = getStreamContext();
           if (streamContext) {
@@ -248,7 +267,7 @@ CRITICAL OUTPUT RULES (NON-NEGOTIABLE):
               () => sseStream
             );
           }
-        } catch (_) {
+        } catch {
           // ignore redis errors
         }
       },
