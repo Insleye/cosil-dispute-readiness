@@ -141,7 +141,19 @@ export async function POST(request: Request) {
       execute: async ({ writer: dataStream }) => {
         const result = streamText({
           model: getLanguageModel(selectedChatModel),
-          system: systemPrompt({ selectedChatModel, requestHints }),
+
+          // 🔒 CRITICAL CHANGE: force deterministic tier marker
+          system: `${systemPrompt({ selectedChatModel, requestHints })}
+
+CRITICAL OUTPUT RULES (NON-NEGOTIABLE):
+1) Your FIRST line must be exactly ONE of:
+   [COSIL_TIER: LOW]
+   [COSIL_TIER: ESCALATING]
+   [COSIL_TIER: HIGH]
+2) Do not place anything before the tier line.
+3) After the tier line, continue with clear, structured, UK property and housing dispute guidance.
+4) Provide strategic guidance only. Do not give legal advice.`,
+
           messages: modelMessages,
           stopWhen: stepCountIs(5),
           experimental_activeTools: isReasoningModel
