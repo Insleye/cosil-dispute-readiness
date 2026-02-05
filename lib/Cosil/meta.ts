@@ -1,60 +1,98 @@
 // lib/cosil/meta.ts
+// -----------------------------------------------------------------------------
+// COSIL internal meta + conversion tracking helpers
+//
+// Purpose:
+// 1) Allow the model to include invisible internal scoring + tier/segment
+// 2) Strip that meta from the visible assistant message
+// 3) Append tracking parameters to Cosil CTAs so you can see which tier converts
+//
+// Expected hidden first-line format (must be first line of assistant output):
+// [[COSIL_META tier=HIGH score=85 segment=B2C flags=tribunal,hearing_soon]]
+// -----------------------------------------------------------------------------
+
+export type CosilTier = "LOW" | "ESCALATING" | "HIGH";
+export type CosilSegment = "B2C" | "B2B";
 
 export type CosilMeta = {
-  tier: "LOW" | "ESCALATING" | "HIGH";
-  score: number;
-  segment: "B2C" | "B2B";
+  tier: CosilTier;
+  score: number; // 0–100
+  segment: CosilSegment;
   flags: string[];
 };
 
-/**
- * Matches:
- * [[COSIL_META tier=HIGH score=85 segment=B2C flags=tribunal,hearing_soon]]
- */
-const COSIL_META_RE =
-  /^\[\[COSIL_META\s+tier=(LOW|ESCALATING|HIGH)\s+score=(\d{1,3})\s+segment=(B2C|B2B)\s+flags=([a-z0-9_,\-]*)\]\]\s*\n?/i;
+const META_PREFIX_RE =
+  /^\s*\[\[COSIL_META\s+([^\]]+)\]\]\s*\n?/i;
+
+// Parses "tier=HIGH score=85 segment=B2C flags=a,b,c"
+function parseMetaKV(raw: string): CosilMeta | null {
+  const kv: Record<string, string> = {};
+
+  for (const part of raw.split(/\s+/).filter(Boolean)) {
+    const idx = part.indexOf("=");
+    if (idx === -1) continue;
+    const key = part.slice(0, idx).trim().toLowerCase();
+    const value = part.slice(idx + 1).trim();
+    if (!key) continue;
+    kv[key] = value;
+  }
+
+  const tierRaw = (kv["tier"] || "").toUpperCase();
+  const segmentRaw = (kv["segment"] || "").toUpperCase();
+
+  const tier: CosilTier =
+    tierRaw === "HIGH" || tierRaw === "ESCALATING" || tierRaw === "LOW"
+      ? (tierRaw as CosilTier)
+      : "LOW";
+
+  const segment: CosilSegment =
+    segmentRaw === "B2B" || segmentRaw === "B2C"
+      ? (segmentRaw as CosilSegment)
+      : "B2C";
+
+  const scoreNum = Number(kv["score"]);
+  const score = Number.isFinite(scoreNum)
+    ? Math.min(100, Math.max(0, Math.round(scoreNum)))
+    : 0;
+
+  const flags = (kv["flags"] || "")
+    .split(",")
+    .map((f) => f.trim().toLowerCase())
+    .filter(Boolean);
+
+  return { tier, score, segment, flags };
+}
 
 /**
- * Removes internal COSIL meta from AI output before display
- * and returns parsed metadata for CTAs, tracking, logic.
+ * Strips internal COSIL meta from the assistant message so it never shows to users.
+ * Returns both the clean user-facing text and the parsed meta (if present).
  */
 export function stripCosilMeta(text: string): {
   cleanText: string;
   meta: CosilMeta | null;
 } {
-  const match = text.match(COSIL_META_RE);
+  if (!text) return { cleanText: text, meta: null };
 
-  if (!match) {
-    return { cleanText: text, meta: null };
-  }
+  const match = text.match(META_PREFIX_RE);
+  if (!match) return { cleanText: text, meta: null };
 
-  const tier = match[1].toUpperCase() as CosilMeta["tier"];
-  const score = Math.min(100, Math.max(0, Number(match[2] || 0)));
-  const segment = match[3].toUpperCase() as CosilMeta["segment"];
-  const flagsRaw = match[4] || "";
+  const metaRaw = match[1] || "";
+  const meta = parseMetaKV(metaRaw);
 
-  const flags = flagsRaw
-    .split(",")
-    .map((f) => f.trim())
-    .filter(Boolean);
-
-  const cleanText = text.replace(COSIL_META_RE, "");
-
-  return {
-    cleanText,
-    meta: { tier, score, segment, flags },
-  };
+  const cleanText = text.replace(META_PREFIX_RE, "");
+  return { cleanText, meta };
 }
 
 /**
- * Adds tier/segment/score tracking to Cosil links
- * so you can see which tier converts best.
+ * Adds tier/segment/score/flags tracking to Cosil URLs.
+ * Use this for CTA buttons (Contact, Request review, Readiness page etc.).
+ *
+ * Example output:
+ * https://cosilsolutions.co.uk/contact?src=readiness&tier=HIGH&segment=B2C&score=85&flags=tribunal,hearing_soon
  */
-export function withCosilTracking(
-  url: string,
-  meta: CosilMeta | null
-): string {
+export function withCosilTracking(url: string, meta: CosilMeta | null): string {
   try {
+    // Works both client and server side
     const base =
       typeof window !== "undefined"
         ? window.location.origin
@@ -75,6 +113,16 @@ export function withCosilTracking(
 
     return u.toString();
   } catch {
+    // If URL parsing fails, return original
     return url;
   }
+}
+
+/**
+ * Lightweight helper if you want a single "conversion key" for analytics events.
+ * Example: "HIGH|B2C|85"
+ */
+export function cosilConversionKey(meta: CosilMeta | null): string {
+  if (!meta) return "UNKNOWN";
+  return `${meta.tier}|${meta.segment}|${meta.score}`;
 }
