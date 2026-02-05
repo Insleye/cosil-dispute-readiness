@@ -34,6 +34,9 @@ function inferSegmentFromRole(
   return "B2B";
 }
 
+const FRAMEWORK_ANCHOR =
+  "This assessment follows the Cosil Dispute Readiness™ Framework and informs next steps that may be supported through Cosil’s R.E.S.O.L.V.E.™ methodology and RESTORE practice model, where appropriate.";
+
 export default function DisputeReadinessGate({ initialChatModel }: Props) {
   const [userRole, setUserRole] = useState<(typeof ROLE_OPTIONS)[number] | null>(
     null
@@ -49,6 +52,8 @@ export default function DisputeReadinessGate({ initialChatModel }: Props) {
     return (
       <div className="mx-auto mt-16 max-w-2xl px-4">
         <h1 className="mb-2 text-2xl font-semibold">Dispute Readiness Check</h1>
+
+        <p className="mb-3 text-sm text-zinc-500">{FRAMEWORK_ANCHOR}</p>
 
         <p className="mb-6 text-zinc-500">
           To give you the right guidance, tell us which best describes you.
@@ -79,6 +84,8 @@ export default function DisputeReadinessGate({ initialChatModel }: Props) {
     return (
       <div className="mx-auto mt-16 max-w-2xl px-4">
         <h1 className="mb-2 text-2xl font-semibold">Complaint stage check</h1>
+
+        <p className="mb-3 text-sm text-zinc-500">{FRAMEWORK_ANCHOR}</p>
 
         <p className="mb-6 text-zinc-500">
           Where are you currently in the complaints process?
