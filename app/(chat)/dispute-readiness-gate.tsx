@@ -27,6 +27,13 @@ type Props = {
   initialChatModel: string;
 };
 
+function inferSegmentFromRole(
+  role: (typeof ROLE_OPTIONS)[number]
+): "B2C" | "B2B" {
+  if (role === "Tenant / Resident" || role === "Leaseholder") return "B2C";
+  return "B2B";
+}
+
 export default function DisputeReadinessGate({ initialChatModel }: Props) {
   const [userRole, setUserRole] = useState<(typeof ROLE_OPTIONS)[number] | null>(
     null
@@ -103,6 +110,8 @@ export default function DisputeReadinessGate({ initialChatModel }: Props) {
     );
   }
 
+  const segment = inferSegmentFromRole(userRole);
+
   // Step 3: open chat with forced context
   const initialMessages = [
     {
@@ -111,7 +120,12 @@ export default function DisputeReadinessGate({ initialChatModel }: Props) {
       parts: [
         {
           type: "text" as const,
-          text: `Role: ${userRole}\nComplaint stage: ${complaintStage}\nWhat I need help with: (I will explain next).`,
+          text: `Context for Cosil Readiness Triage:
+Role: ${userRole}
+Segment: ${segment}
+Complaint stage: ${complaintStage}
+
+What I need help with: (I will explain next).`,
         },
       ],
     },
