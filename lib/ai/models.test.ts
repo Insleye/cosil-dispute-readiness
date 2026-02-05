@@ -7,9 +7,11 @@ const mockUsage = {
   outputTokens: { total: 20, text: 20, reasoning: 0 },
 };
 
+const stopFinishReason = { unified: "stop" as const, raw: "stop" };
+
 export const chatModel = new MockLanguageModelV3({
   doGenerate: async () => ({
-    finishReason: "stop",
+    finishReason: stopFinishReason,
     usage: mockUsage,
     content: [{ type: "text", text: "Hello, world!" }],
     warnings: [],
@@ -25,7 +27,7 @@ export const chatModel = new MockLanguageModelV3({
 
 export const reasoningModel = new MockLanguageModelV3({
   doGenerate: async () => ({
-    finishReason: "stop",
+    finishReason: stopFinishReason,
     usage: mockUsage,
     content: [{ type: "text", text: "Hello, world!" }],
     warnings: [],
@@ -41,7 +43,7 @@ export const reasoningModel = new MockLanguageModelV3({
 
 export const titleModel = new MockLanguageModelV3({
   doGenerate: async () => ({
-    finishReason: "stop",
+    finishReason: stopFinishReason,
     usage: mockUsage,
     content: [{ type: "text", text: "This is a test title" }],
     warnings: [],
@@ -56,7 +58,7 @@ export const titleModel = new MockLanguageModelV3({
         { id: "1", type: "text-end" },
         {
           type: "finish",
-          finishReason: "stop",
+          finishReason: stopFinishReason,
           usage: mockUsage,
         },
       ],
@@ -66,7 +68,7 @@ export const titleModel = new MockLanguageModelV3({
 
 export const artifactModel = new MockLanguageModelV3({
   doGenerate: async () => ({
-    finishReason: "stop",
+    finishReason: stopFinishReason,
     usage: mockUsage,
     content: [{ type: "text", text: "Hello, world!" }],
     warnings: [],
