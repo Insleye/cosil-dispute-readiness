@@ -7,20 +7,17 @@ import { Button } from "@/components/ui/button";
 import { generateUUID } from "@/lib/utils";
 
 const ROLE_OPTIONS = [
-  "Tenant / Resident",
+  "Resident or tenant",
   "Leaseholder",
-  "Landlord",
-  "Freeholder",
-  "Managing Agent / Property Manager",
-  "Housing Association",
-  "Local Authority",
+  "Property owner or landlord",
+  "Organisation",
 ] as const;
 
 const COMPLAINT_STAGE_OPTIONS = [
-  "No, I have not raised a formal complaint",
-  "Yes, complaint raised but no response yet",
-  "Yes, complaint responded to but unresolved",
-  "Yes, complaint exhausted / final response received",
+  "Early stage, no formal complaint raised",
+  "Complaint raised, awaiting response",
+  "Complaint responded to, matter unresolved",
+  "Formal process underway or imminent deadline",
 ] as const;
 
 type Props = {
@@ -30,18 +27,19 @@ type Props = {
 function inferSegmentFromRole(
   role: (typeof ROLE_OPTIONS)[number]
 ): "B2C" | "B2B" {
-  if (role === "Tenant / Resident" || role === "Leaseholder") return "B2C";
-  return "B2B";
+  if (role === "Organisation") return "B2B";
+  if (role === "Property owner or landlord") return "B2B";
+  return "B2C";
 }
 
 const FRAMEWORK_ANCHOR =
-  "This assessment follows the Cosil Dispute Readiness™ Framework and informs next steps that may be supported through Cosil’s R.E.S.O.L.V.E.™ methodology and RESTORE practice model, where appropriate.";
+  "A structured diagnostic produced by Cosil Solutions Ltd, a strategic dispute and risk consultancy and accredited civil and commercial mediation practice.";
 
 export default function DisputeReadinessGate({ initialChatModel }: Props) {
   const [userRole, setUserRole] = useState<(typeof ROLE_OPTIONS)[number] | null>(
     null
   );
-  const [complaintStage, setComplaintStage] = useState<
+  const [complaintStage, setComplaintStage] = useState
     (typeof COMPLAINT_STAGE_OPTIONS)[number] | null
   >(null);
 
@@ -56,7 +54,7 @@ export default function DisputeReadinessGate({ initialChatModel }: Props) {
         <p className="mb-3 text-sm text-zinc-500">{FRAMEWORK_ANCHOR}</p>
 
         <p className="mb-6 text-zinc-500">
-          To give you the right guidance, tell us which best describes you.
+          Select the description that applies. The assessment will be calibrated accordingly.
         </p>
 
         <div className="grid gap-3">
@@ -73,7 +71,7 @@ export default function DisputeReadinessGate({ initialChatModel }: Props) {
         </div>
 
         <p className="mt-6 text-xs text-zinc-400">
-          This tool provides general strategic guidance, not legal advice.
+          This tool produces a position and risk assessment. It does not constitute legal or professional advice.
         </p>
       </div>
     );
@@ -83,12 +81,12 @@ export default function DisputeReadinessGate({ initialChatModel }: Props) {
   if (!complaintStage) {
     return (
       <div className="mx-auto mt-16 max-w-2xl px-4">
-        <h1 className="mb-2 text-2xl font-semibold">Complaint stage check</h1>
+        <h1 className="mb-2 text-2xl font-semibold">Stage of the matter</h1>
 
         <p className="mb-3 text-sm text-zinc-500">{FRAMEWORK_ANCHOR}</p>
 
         <p className="mb-6 text-zinc-500">
-          Where are you currently in the complaints process?
+          Indicate the current stage of the matter.
         </p>
 
         <div className="grid gap-3">
@@ -127,12 +125,12 @@ export default function DisputeReadinessGate({ initialChatModel }: Props) {
       parts: [
         {
           type: "text" as const,
-          text: `Context for Cosil Readiness Triage:
+          text: `Assessment input.
 Role: ${userRole}
 Segment: ${segment}
-Complaint stage: ${complaintStage}
+Stage: ${complaintStage}
 
-What I need help with: (I will explain next).`,
+Description of the matter follows.`,
         },
       ],
     },
