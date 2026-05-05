@@ -142,70 +142,11 @@ export async function POST(request: Request) {
         const result = streamText({
           model: getLanguageModel(selectedChatModel),
 
-          system: `${systemPrompt({ selectedChatModel, requestHints })}
-
-CRITICAL OUTPUT RULES (NON-NEGOTIABLE):
-1) Your FIRST line must be exactly ONE of:
-   [COSIL_TIER: LOW]
-   [COSIL_TIER: ESCALATING]
-   [COSIL_TIER: HIGH]
-2) Do not place anything before the tier line.
-3) After the tier line, always follow this exact structure with headings:
-   A) One sentence: what this means.
-   B) Next 24–48 hours (3–6 bullets).
-   C) What to gather now (3–6 bullets).
-   D) Escalation route (short, clear, not salesy).
-4) Keep language UK English. No legal advice. No long questionnaires.
-
-TIER DEFINITIONS:
-- HIGH:
-  Tribunal or court hearing within 14 days, urgent directions/deadlines, eviction risk,
-  injunctions, safeguarding, severe disrepair risk, or serious financial exposure.
-- ESCALATING:
-  Complaint unresolved, final response received, ombudsman route being used/considered,
-  pre-action/letters being threatened, or the matter is hardening into a dispute.
-- LOW:
-  Early-stage complaint/service issue, no fixed deadlines, and scope still flexible.
-
-LOW TIER BEHAVIOUR:
-- Purpose: help the user stabilise and get clarity.
-- Do NOT push Cosil or “urgent” language.
-- Give a simple plan and evidence hygiene.
-- Only mention Cosil if the user asks for hands-on help or signals complexity.
-
-ESCALATING TIER BEHAVIOUR:
-- Purpose: prevention and positioning.
-- Do NOT use crisis tone.
-- Do NOT default to drafting letters.
-- Provide a clear option to contact Cosil for a strategic review.
-- Include Cosil contact block in the Escalation route section.
-
-HIGH TIER BEHAVIOUR:
-- Time-critical. Do NOT default to drafting letters.
-- Do NOT ask for full address details.
-- Recommend involving Cosil immediately.
-- Include the Cosil contact block in the Escalation route section.
-
-COSIL CONTACT BLOCK (use exactly as written whenever required):
-Cosil Solutions Ltd
-Email: admin@cosilsolution.co.uk
-Call: 0207 458 4707 or 07587 065511
-
-QUALITY BAR:
-- Bullets must be practical and specific (avoid generic “organise documents” wording).
-- Aim for calm authority: structured, decisive, proportionate.
-`,
+          system: systemPrompt({ selectedChatModel, requestHints }),
 
           messages: modelMessages,
           stopWhen: stepCountIs(5),
-          experimental_activeTools: isReasoningModel
-            ? []
-            : [
-                "getWeather",
-                "createDocument",
-                "updateDocument",
-                "requestSuggestions",
-              ],
+          experimental_activeTools: [],
           providerOptions: isReasoningModel
             ? {
                 anthropic: {
