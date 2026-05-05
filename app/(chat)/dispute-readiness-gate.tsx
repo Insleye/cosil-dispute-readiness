@@ -45,7 +45,6 @@ export default function DisputeReadinessGate({ initialChatModel }: Props) {
 
   const chatId = useMemo(() => generateUUID(), []);
 
-  // Step 1: role
   if (!userRole) {
     return (
       <div className="mx-auto mt-16 max-w-2xl px-4">
@@ -77,7 +76,6 @@ export default function DisputeReadinessGate({ initialChatModel }: Props) {
     );
   }
 
-  // Step 2: complaint stage
   if (!complaintStage) {
     return (
       <div className="mx-auto mt-16 max-w-2xl px-4">
@@ -117,7 +115,6 @@ export default function DisputeReadinessGate({ initialChatModel }: Props) {
 
   const segment = inferSegmentFromRole(userRole);
 
-  // Step 3: open chat with forced context
   const initialMessages = [
     {
       id: generateUUID(),
