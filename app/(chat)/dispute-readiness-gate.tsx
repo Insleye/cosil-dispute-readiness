@@ -1,4 +1,4 @@
-"use client"; // v4
+"use client"; // v5
 
 import { useMemo, useState } from "react";
 import { Chat } from "@/components/chat";
