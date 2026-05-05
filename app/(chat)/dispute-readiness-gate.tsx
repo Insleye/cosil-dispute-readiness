@@ -33,7 +33,7 @@ function inferSegmentFromRole(
 }
 
 const FRAMEWORK_ANCHOR =
-  "A structured diagnostic produced by Cosil Solutions Ltd, a strategic dispute and risk consultancy and accredited civil and commercial mediation practice.";
+  "A structured diagnostic produced by Cosil Solutions Ltd, a strategic dispute and risk consultancy and accredited civil and commercial mediation practice. V2.";
 
 export default function DisputeReadinessGate({ initialChatModel }: Props) {
   const [userRole, setUserRole] = useState<(typeof ROLE_OPTIONS)[number] | null>(
