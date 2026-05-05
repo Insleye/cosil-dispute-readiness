@@ -8,21 +8,27 @@ import { generateUUID } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 
 const ROLE_OPTIONS = [
-  "Tenant / Resident",
+  "Resident or tenant",
   "Leaseholder",
-  "Landlord",
-  "Freeholder",
-  "Managing Agent / Property Manager",
-  "Housing Association",
-  "Local Authority",
+  "Property owner or landlord",
+  "Organisation",
 ];
 
 const COMPLAINT_STAGE_OPTIONS = [
-  "No, I have not raised a formal complaint",
-  "Yes, complaint raised but no response yet",
-  "Yes, complaint responded to but unresolved",
-  "Yes, complaint exhausted / final response received",
+  "Early stage, no formal complaint raised",
+  "Complaint raised, awaiting response",
+  "Complaint responded to, matter unresolved",
+  "Formal process underway or imminent deadline",
 ];
+
+const FRAMEWORK_ANCHOR =
+  "A structured diagnostic produced by Cosil Solutions Ltd, a strategic dispute and risk consultancy and accredited civil and commercial mediation practice.";
+
+function inferSegmentFromRole(role: string): "B2C" | "B2B" {
+  if (role === "Organisation") return "B2B";
+  if (role === "Property owner or landlord") return "B2B";
+  return "B2C";
+}
 
 export function NewChatPage() {
   const [userRole, setUserRole] = useState<string | null>(null);
@@ -33,12 +39,12 @@ export function NewChatPage() {
   if (!userRole) {
     return (
       <div className="mx-auto mt-16 max-w-2xl px-4">
-        <h1 className="mb-2 text-2xl font-semibold">
-          Dispute Readiness Check
-        </h1>
+        <h1 className="mb-2 text-2xl font-semibold">Dispute Readiness Check</h1>
+
+        <p className="mb-3 text-sm text-zinc-500">{FRAMEWORK_ANCHOR}</p>
 
         <p className="mb-6 text-zinc-500">
-          To give you the right guidance, first tell us which best describes you.
+          Select the description that applies. The assessment will be calibrated accordingly.
         </p>
 
         <div className="grid gap-3">
@@ -53,20 +59,24 @@ export function NewChatPage() {
             </Button>
           ))}
         </div>
+
+        <p className="mt-6 text-xs text-zinc-400">
+          This tool produces a position and risk assessment. It does not constitute legal or professional advice.
+        </p>
       </div>
     );
   }
 
-  // STEP 2 — Complaint stage selection
+  // STEP 2 — Stage selection
   if (!complaintStage) {
     return (
       <div className="mx-auto mt-16 max-w-2xl px-4">
-        <h1 className="mb-2 text-2xl font-semibold">
-          Dispute Readiness Check
-        </h1>
+        <h1 className="mb-2 text-2xl font-semibold">Stage of the matter</h1>
+
+        <p className="mb-3 text-sm text-zinc-500">{FRAMEWORK_ANCHOR}</p>
 
         <p className="mb-6 text-zinc-500">
-          Have you already raised a formal complaint?
+          Indicate the current stage of the matter.
         </p>
 
         <div className="grid gap-3">
@@ -93,12 +103,32 @@ export function NewChatPage() {
     );
   }
 
+  const segment = inferSegmentFromRole(userRole);
+
   // STEP 3 — Show chat with context
+  const initialMessages = [
+    {
+      id: generateUUID(),
+      role: "user" as const,
+      parts: [
+        {
+          type: "text" as const,
+          text: `Assessment input.
+Role: ${userRole}
+Segment: ${segment}
+Stage: ${complaintStage}
+
+Description of the matter follows.`,
+        },
+      ],
+    },
+  ];
+
   return (
     <>
       <Chat
         id={id}
-        initialMessages={[]}
+        initialMessages={initialMessages}
         initialChatModel={DEFAULT_CHAT_MODEL}
         initialVisibilityType="private"
         isReadonly={false}
