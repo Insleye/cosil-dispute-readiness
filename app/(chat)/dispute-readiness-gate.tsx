@@ -39,9 +39,9 @@ export default function DisputeReadinessGate({ initialChatModel }: Props) {
   const [userRole, setUserRole] = useState<(typeof ROLE_OPTIONS)[number] | null>(
     null
   );
-  const [complaintStage, setComplaintStage] = useState
-    (typeof COMPLAINT_STAGE_OPTIONS)[number] | null
-  >(null);
+  const [complaintStage, setComplaintStage] = useState<(typeof COMPLAINT_STAGE_OPTIONS)[number] | null>(
+    null
+  );
 
   const chatId = useMemo(() => generateUUID(), []);
 
