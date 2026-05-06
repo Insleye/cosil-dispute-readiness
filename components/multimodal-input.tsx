@@ -11,7 +11,6 @@ import {
   type SetStateAction,
   useCallback,
   useEffect,
-  useMemo,
   useRef,
   useState,
 } from "react";
@@ -266,7 +265,7 @@ function PureMultimodalInput({
 
   return (
     <div className={cn("relative flex w-full flex-col gap-4", className)}>
-      {messages.length === 0 && attachments.length === 0 && uploadQueue.length === 0 && (
+      {messages.length <= 1 && attachments.length === 0 && uploadQueue.length === 0 && (
         <SuggestedActions
           chatId={chatId}
           selectedVisibilityType={selectedVisibilityType}
