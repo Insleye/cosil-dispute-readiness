@@ -43,21 +43,12 @@ function extractTextFromMessage(msg: ChatMessage | undefined): string {
     .join("\n");
 }
 
-/**
- * Tier detection strategy:
- * 1) Preferred: [COSIL_TIER: HIGH|ESCALATING|LOW]
- * 2) Fallback: parse the structured output you forced (Tier section)
- * 3) Extra fallback: look for "HIGH RISK" etc near the start
- */
 function detectTierFromAssistantText(textRaw: string): RiskTier {
   const text = (textRaw || "").trim();
 
-  // 1) Marker pattern
   const marker = text.match(/\[COSIL_TIER:\s*(LOW|ESCALATING|HIGH)\s*\]/i);
   if (marker?.[1]) return marker[1].toUpperCase() as RiskTier;
 
-  // 2) "Tier" section (your forced structure)
-  // examples: "Tier\nHIGH RISK" or "Tier: HIGH RISK"
   const tierLine =
     text.match(/^\s*Tier\s*[:\n]\s*(LOW RISK|ESCALATING|HIGH RISK)\s*$/im)?.[1] ??
     text.match(/^\s*Tier\s*[:\n]\s*(LOW|ESCALATING|HIGH)\s*$/im)?.[1];
@@ -69,7 +60,6 @@ function detectTierFromAssistantText(textRaw: string): RiskTier {
     if (t.includes("LOW")) return "LOW";
   }
 
-  // 3) Extra fallback
   const head = text.slice(0, 400).toUpperCase();
   if (head.includes("HIGH RISK")) return "HIGH";
   if (head.includes("ESCALATING")) return "ESCALATING";
@@ -114,7 +104,6 @@ export function Chat({
 
   const { mutate } = useSWRConfig();
 
-  // Handle browser back/forward navigation
   useEffect(() => {
     const handlePopState = () => {
       router.refresh();
@@ -238,7 +227,6 @@ export function Chat({
     setMessages,
   });
 
-  // --- Tier-based CTA block (UI-led escalation) ---
   const readinessTier: RiskTier = useMemo(() => {
     return getLatestAssistantTier(messages);
   }, [messages]);
@@ -246,11 +234,7 @@ export function Chat({
   const isEscalationVisible = readinessTier === "HIGH" || readinessTier === "ESCALATING";
 
   const contactUrl = "https://cosilsolutions.co.uk/contact/";
-  const readinessUrl =
-    "https://cosilsolutions.co.uk/dispute-readiness-check-for-property-housing-disputes/";
-
   const mailto = "mailto:admin@cosilsolution.co.uk";
-  const telMain = "tel:+442074584707";
   const telMobile = "tel:+447587065511";
 
   return (
@@ -275,72 +259,46 @@ export function Chat({
           votes={votes}
         />
 
-        {/* Tier-based escalation block (appears only after assistant produces a tier) */}
         {isEscalationVisible && (
           <div className="mx-auto w-full max-w-4xl px-2 pb-2 md:px-4">
-            <div className="rounded-lg border bg-background p-3">
-              <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+            <div className="rounded-lg border bg-background p-4">
+              <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
                 <div className="text-sm">
-                  <div className="font-medium">
+                  <div className="font-semibold text-zinc-900">
                     {readinessTier === "HIGH"
-                      ? "Time-critical support recommended"
-                      : "Optional support to prevent escalation"}
+                      ? "Immediate consultation recommended"
+                      : "Structured consultation available"}
                   </div>
                   <div className="mt-1 text-zinc-500">
                     {readinessTier === "HIGH"
-                      ? "If you want structured help to regain control quickly, you can contact Cosil now."
-                      : "If you want a structured review and next-step plan, you can request support."}
+                      ? "This matter requires expert assessment without delay. Cosil provides structured intervention at this level of exposure."
+                      : "This assessment identifies risk and gaps that require expert input. Cosil provides structured case review and strategic support."}
                   </div>
                 </div>
 
                 <div className="flex flex-wrap gap-2">
-                  {readinessTier === "HIGH" ? (
-                    <>
-                      <Button
-                        onClick={() => window.open(contactUrl, "_blank")}
-                      >
-                        Contact Cosil
-                      </Button>
-                      <Button
-                        variant="outline"
-                        onClick={() => window.open(readinessUrl, "_blank")}
-                      >
-                        Review options
-                      </Button>
-                    </>
-                  ) : (
-                    <>
-                      <Button
-                        onClick={() => window.open(contactUrl, "_blank")}
-                      >
-                        Request a dispute review
-                      </Button>
-                      <Button
-                        variant="outline"
-                        onClick={() => window.open(readinessUrl, "_blank")}
-                      >
-                        Readiness page
-                      </Button>
-                    </>
-                  )}
-
                   <Button
-                    variant="ghost"
-                    onClick={() => window.location.href = mailto}
+                    onClick={() => window.open(contactUrl, "_blank")}
                   >
-                    Email
+                    Book a consultation
                   </Button>
                   <Button
-                    variant="ghost"
-                    onClick={() => (window.location.href = telMain)}
+                    variant="outline"
+                    onClick={() => window.location.href = mailto}
                   >
-                    Call
+                    Email Cosil
+                  </Button>
+                  <Button
+                    variant="outline"
+                    onClick={() => (window.location.href = telMobile)}
+                  >
+                    Call 07587 065511
                   </Button>
                 </div>
               </div>
 
-              <div className="mt-2 text-xs text-zinc-500">
-                admin@cosilsolution.co.uk · 0207 458 4707 · 07587 065511
+              <div className="mt-3 text-xs text-zinc-400">
+                Cosil Solutions Ltd · admin@cosilsolution.co.uk · 07587 065511
               </div>
             </div>
           </div>
