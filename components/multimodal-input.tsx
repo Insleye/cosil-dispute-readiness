@@ -43,14 +43,13 @@ import {
 import { ArrowUpIcon, PaperclipIcon, StopIcon } from "./icons";
 import { PreviewAttachment } from "./preview-attachment";
 
-// IMPORTANT: this must be a default import if suggested-actions.tsx exports default
 import SuggestedActions from "./suggested-actions";
 
 import { Button } from "./ui/button";
 import type { VisibilityType } from "./visibility-selector";
 
 function setCookie(name: string, value: string) {
-  const maxAge = 60 * 60 * 24 * 365; // 1 year
+  const maxAge = 60 * 60 * 24 * 365;
   document.cookie = `${name}=${encodeURIComponent(value)}; path=/; max-age=${maxAge}`;
 }
 
@@ -124,7 +123,6 @@ function PureMultimodalInput({
     const finalValue = domValue || localStorageInput || "";
     setInput(finalValue);
     adjustHeight();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [adjustHeight]);
 
   useEffect(() => {
@@ -333,7 +331,7 @@ function PureMultimodalInput({
             maxHeight={200}
             minHeight={44}
             onChange={handleInput}
-            placeholder="Send a message..."
+            placeholder="Describe your matter briefly. Include what has happened, where things stand, and any deadlines."
             ref={textareaRef}
             rows={1}
             value={input}
@@ -347,7 +345,6 @@ function PureMultimodalInput({
               selectedModelId={selectedModelId}
               status={status}
             />
-            <ModelSelectorCompact onModelChange={onModelChange} selectedModelId={selectedModelId} />
           </PromptInputTools>
 
           {status === "submitted" ? (
