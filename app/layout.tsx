@@ -2,18 +2,48 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { Toaster } from "sonner";
 import { ThemeProvider } from "@/components/theme-provider";
-
 import "./globals.css";
 import { SessionProvider } from "next-auth/react";
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://chat.vercel.ai"),
-  title: "Cosil Dispute Readiness Check",
-  description: "A structured dispute readiness check from Cosil Solutions Ltd to help organisations and individuals reduce escalation, strengthen decision-making, and choose the right resolution route. Not legal advice",
+  metadataBase: new URL("https://cosil-dispute-readiness.vercel.app"),
+  title: "Dispute Readiness Check | Cosil Solutions Ltd",
+  description: "A structured position and risk assessment for housing, leasehold, workplace, employment, and commercial disputes. Produced by Cosil Solutions Ltd, a strategic dispute and risk consultancy and accredited civil and commercial mediation practice.",
+  keywords: [
+    "dispute resolution",
+    "mediation",
+    "housing dispute",
+    "leasehold dispute",
+    "service charge dispute",
+    "workplace grievance",
+    "Housing Ombudsman",
+    "Awaab's Law",
+    "commercial dispute",
+    "dispute readiness",
+    "Cosil Solutions",
+  ],
+  authors: [{ name: "Cosil Solutions Ltd", url: "https://cosilsolutions.co.uk" }],
+  openGraph: {
+    title: "Dispute Readiness Check | Cosil Solutions Ltd",
+    description: "Not sure where your matter sits or what to do next? Get a structured position and risk assessment from Cosil Solutions Ltd.",
+    url: "https://cosil-dispute-readiness.vercel.app",
+    siteName: "Cosil Solutions Ltd",
+    locale: "en_GB",
+    type: "website",
+  },
+  twitter: {
+    card: "summary",
+    title: "Dispute Readiness Check | Cosil Solutions Ltd",
+    description: "Not sure where your matter sits or what to do next? Get a structured position and risk assessment from Cosil Solutions Ltd.",
+  },
+  robots: {
+    index: true,
+    follow: true,
+  },
 };
 
 export const viewport = {
-  maximumScale: 1, // Disable auto-zoom on mobile Safari
+  maximumScale: 1,
 };
 
 const geist = Geist({
@@ -56,16 +86,11 @@ export default function RootLayout({
   return (
     <html
       className={`${geist.variable} ${geistMono.variable}`}
-      // `next-themes` injects an extra classname to the body element to avoid
-      // visual flicker before hydration. Hence the `suppressHydrationWarning`
-      // prop is necessary to avoid the React hydration mismatch warning.
-      // https://github.com/pacocoursey/next-themes?tab=readme-ov-file#with-app
       lang="en"
       suppressHydrationWarning
     >
       <head>
         <script
-          // biome-ignore lint/security/noDangerouslySetInnerHtml: "Required"
           dangerouslySetInnerHTML={{
             __html: THEME_COLOR_SCRIPT,
           }}
