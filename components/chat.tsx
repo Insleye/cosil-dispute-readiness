@@ -233,7 +233,7 @@ export function Chat({
     readinessTier === "HIGH" || readinessTier === "ESCALATING";
 
   const contactUrl = "https://calendly.com/cosilsolutions/consultation";
-  const mailto = "mailto:admin@cosilsolution.co.uk";
+  const mailto = "mailto:admin@cosilsolutions.co.uk";
   const telMobile = "tel:+447587065611";
 
   return (
@@ -297,7 +297,7 @@ export function Chat({
               </div>
 
               <div className="mt-3 text-xs text-zinc-400">
-                Cosil Solutions Ltd · admin@cosilsolution.co.uk · 07587 065 611
+                Cosil Solutions Ltd · admin@cosilsolutions.co.uk · 07587 065 611
               </div>
             </div>
           </div>
