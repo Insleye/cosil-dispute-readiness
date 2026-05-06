@@ -94,7 +94,11 @@ export function getTrailingMessageId({
 }
 
 export function sanitizeText(text: string) {
-  return text.replace('<has_function_call>', '');
+  return text
+    .replace('<has_function_call>', '')
+    .replace(/\[COSIL_TIER:\s*(LOW|ESCALATING|HIGH)\s*\]\n?/gi, '')
+    .replace(/\[COSIL_SEGMENT:\s*(B2C|B2B)\s*\]\n?/gi, '')
+    .replace(/\[COSIL_SCORE:\s*\d+\s*\]\n?/gi, '');
 }
 
 export function convertToUIMessages(messages: DBMessage[]): ChatMessage[] {
