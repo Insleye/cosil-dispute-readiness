@@ -232,7 +232,7 @@ export function Chat({
   const isEscalationVisible =
     readinessTier === "HIGH" || readinessTier === "ESCALATING";
 
-  const contactUrl = "https://calendly.com/cosilsolutions/consultation"
+  const contactUrl = "https://calendly.com/cosilsolutions/consultation";
   const mailto = "mailto:admin@cosilsolution.co.uk";
   const telMobile = "tel:+447587065611";
 
@@ -322,6 +322,7 @@ export function Chat({
             />
           )}
         </div>
+      </div>
 
       <Artifact
         addToolApprovalResponse={addToolApprovalResponse}
