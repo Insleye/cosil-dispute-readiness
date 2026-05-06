@@ -62,8 +62,6 @@ function extractCosilMetaFromText(text: string): { cleanText: string; meta: Cosi
   let working = text ?? "";
   const meta: CosilMeta = {};
 
-  // 1) Optional JSON meta block
-  //    <COSIL_META>{...}</COSIL_META>
   const jsonBlockRegex = /<COSIL_META>\s*([\s\S]*?)\s*<\/COSIL_META>/gi;
   working = working.replace(jsonBlockRegex, (_match, jsonStr) => {
     try {
@@ -82,8 +80,6 @@ function extractCosilMetaFromText(text: string): { cleanText: string; meta: Cosi
     return "";
   });
 
-  // 2) Bracket tags e.g. [COSIL_TIER: HIGH]
-  // Remove only the tags, keep the rest of content untouched.
   const tagRegex = /\[(COSIL[_-][A-Z_]+)\s*:\s*([^\]]+)\]/gi;
 
   working = working.replace(tagRegex, (_match, rawKey, rawValue) => {
@@ -92,7 +88,6 @@ function extractCosilMetaFromText(text: string): { cleanText: string; meta: Cosi
 
     if (key === "COSIL_TIER") {
       const v = value.toUpperCase();
-      // Allow MEDIUM even if not currently used, for future-proofing.
       if (v === "LOW" || v === "MEDIUM" || v === "ESCALATING" || v === "HIGH") {
         meta.tier = v as CosilTier;
       }
@@ -123,7 +118,6 @@ function extractCosilMetaFromText(text: string): { cleanText: string; meta: Cosi
     }
 
     if (key === "COSIL_TRACK") {
-      // Accept semi-colon key pairs: tier=HIGH;segment=B2C;variant=A
       const parts = value.split(";").map((s) => s.trim()).filter(Boolean);
       for (const p of parts) {
         const [kRaw, ...rest] = p.split("=");
@@ -164,11 +158,9 @@ function extractCosilMetaFromText(text: string): { cleanText: string; meta: Cosi
       }
     }
 
-    // Always remove the tag from user-visible output
     return "";
   });
 
-  // Clean up spacing after tag removals
   working = working.replace(/^\s+/, "");
   working = working.replace(/\n{3,}/g, "\n\n");
 
@@ -176,7 +168,6 @@ function extractCosilMetaFromText(text: string): { cleanText: string; meta: Cosi
 }
 
 function stripCosilMetaFromMessage(message: ChatMessage): ChatMessage {
-  // Only strip on assistant messages
   if (message.role !== "assistant" || !message.parts?.length) return message;
 
   let aggregatedMeta: CosilMeta = {};
@@ -184,11 +175,10 @@ function stripCosilMetaFromMessage(message: ChatMessage): ChatMessage {
   const newParts = message.parts.map((part) => {
     if (part?.type !== "text") return part;
 
-    const { cleanText, meta } = extractCosilMetaFromText(part.text ?? "");
+    const { cleanText, meta } = extractCosilMetaFromText((part as any).text ?? "");
     aggregatedMeta = {
       ...aggregatedMeta,
       ...meta,
-      // merge flags if both exist
       flags: Array.isArray(aggregatedMeta.flags) || Array.isArray(meta.flags)
         ? Array.from(new Set([...(aggregatedMeta.flags ?? []), ...(meta.flags ?? [])]))
         : undefined,
@@ -197,8 +187,6 @@ function stripCosilMetaFromMessage(message: ChatMessage): ChatMessage {
     return { ...part, text: cleanText };
   });
 
-  // Attach meta in a non-breaking way for downstream UI (CTA logic, analytics, etc.)
-  // This keeps TypeScript happy (we do not change the public type), but still allows access.
   const enriched = { ...message, parts: newParts } as ChatMessage & { __cosilMeta?: CosilMeta };
   enriched.__cosilMeta = aggregatedMeta;
 
@@ -228,12 +216,10 @@ function PureMessages({
 
   useDataStream();
 
-  // Create a display-safe copy of messages (no COSIL internal tags shown to users)
   const displayMessages = useMemo(() => {
     return messages.map(stripCosilMetaFromMessage);
   }, [messages]);
 
-  // Emit a lightweight browser event when we receive COSIL meta, so CTAs/analytics can listen.
   useEffect(() => {
     const last = displayMessages.at(-1) as (ChatMessage & { __cosilMeta?: CosilMeta }) | undefined;
     if (!last || last.role !== "assistant") return;
@@ -264,9 +250,9 @@ function PureMessages({
         <div className="mx-auto flex min-w-0 max-w-4xl flex-col gap-4 px-2 py-4 md:gap-6 md:px-4">
           {displayMessages.length === 0 && <Greeting />}
 
-        {displayMessages.filter((message, index) => {
+          {displayMessages.filter((message, index) => {
             if (index === 0 && message.role === "user") {
-              const text = message.parts?.find((p: any) => p.type === "text")?.text ?? "";
+              const text = (message.parts?.find((p: any) => p.type === "text") as any)?.text ?? "";
               if (text.startsWith("Assessment input.")) return false;
             }
             return true;
