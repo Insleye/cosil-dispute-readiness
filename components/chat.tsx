@@ -304,14 +304,14 @@ export function Chat({
         )}
 
         <div className="sticky bottom-0 z-1 mx-auto flex w-full max-w-4xl gap-2 border-t-0 bg-background px-2 pb-3 md:px-4 md:pb-4">
-          {!isReadonly && (
+          {!isReadonly && !readinessTier && (
             <MultimodalInput
               attachments={attachments}
               chatId={id}
               input={input}
               messages={messages}
-              onModelChange={setCurrentModelId}
-              selectedModelId={currentModelId}
+              onModelChange={() => {}}
+              selectedModelId="anthropic/claude-sonnet-4.5"
               selectedVisibilityType={visibilityType}
               sendMessage={sendMessage}
               setAttachments={setAttachments}
@@ -322,7 +322,6 @@ export function Chat({
             />
           )}
         </div>
-      </div>
 
       <Artifact
         addToolApprovalResponse={addToolApprovalResponse}
