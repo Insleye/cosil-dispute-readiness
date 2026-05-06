@@ -232,7 +232,7 @@ export function Chat({
   const isEscalationVisible =
     readinessTier === "HIGH" || readinessTier === "ESCALATING";
 
-  const contactUrl = "https://cosilsolutions.co.uk/contact/";
+  const contactUrl = "https://calendly.com/cosilsolutions/consultation"
   const mailto = "mailto:admin@cosilsolution.co.uk";
   const telMobile = "tel:+447587065611";
 
