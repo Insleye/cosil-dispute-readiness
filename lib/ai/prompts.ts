@@ -144,7 +144,7 @@ One sentence. Direct. Cosil is the appropriate next step for this matter.
 
 COSIL CONTACT (include at the end of ESCALATING and HIGH tier assessments only):
 Cosil Solutions Ltd
-Email: admin@cosilsolution.co.uk
+Email: admin@cosilsolutions.co.uk
 Call: 07587 065 611
 
 QUALITY BAR:
