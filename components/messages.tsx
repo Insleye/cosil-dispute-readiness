@@ -264,7 +264,13 @@ function PureMessages({
         <div className="mx-auto flex min-w-0 max-w-4xl flex-col gap-4 px-2 py-4 md:gap-6 md:px-4">
           {displayMessages.length === 0 && <Greeting />}
 
-          {displayMessages.map((message, index) => (
+        {displayMessages.filter((message, index) => {
+            if (index === 0 && message.role === "user") {
+              const text = message.parts?.find((p: any) => p.type === "text")?.text ?? "";
+              if (text.startsWith("Assessment input.")) return false;
+            }
+            return true;
+          }).map((message, index) => (
             <PreviewMessage
               addToolApprovalResponse={addToolApprovalResponse}
               chatId={chatId}
