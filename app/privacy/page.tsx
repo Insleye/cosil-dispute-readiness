@@ -60,8 +60,8 @@ export default function PrivacyPage() {
         <ul className="mb-4 list-none text-zinc-600 dark:text-zinc-400">
           <li className="mb-2">
             Email:{" "}
-            <a className="underline" href="mailto:admin@cosilsolution.co.uk">
-              admin@cosilsolution.co.uk
+            <a className="underline" href="mailto:admin@cosilsolutions.co.uk">
+              admin@cosilsolutions.co.uk
             </a>
           </li>
           <li className="mb-2">
