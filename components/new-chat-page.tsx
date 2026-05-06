@@ -27,6 +27,9 @@ const FRAMEWORK_ANCHOR =
 const SCOPE_STATEMENT =
   "Cosil works with individuals and organisations across all stages of a dispute, complaint, or risk matter.";
 
+const EXAMPLE_MATTERS =
+  "Recent matters include possession disputes, Ombudsman findings, service charge challenges, damp and disrepair, workplace grievances, and commercial contract disputes.";
+
 function inferSegmentFromRole(role: string): "B2C" | "B2B" {
   if (role === "Business or organisation") return "B2B";
   if (role === "Property owner or landlord") return "B2B";
@@ -46,7 +49,9 @@ export function NewChatPage() {
 
         <p className="mb-2 text-sm text-zinc-500">{FRAMEWORK_ANCHOR}</p>
 
-        <p className="mb-6 text-sm text-zinc-600">{SCOPE_STATEMENT}</p>
+        <p className="mb-1 text-sm text-zinc-600">{SCOPE_STATEMENT}</p>
+
+        <p className="mb-6 text-xs text-zinc-400">{EXAMPLE_MATTERS}</p>
 
         <p className="mb-4 text-zinc-500">
           Select the description that applies.
