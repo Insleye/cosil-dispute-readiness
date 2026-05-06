@@ -108,7 +108,6 @@ export function Chat({
     const handlePopState = () => {
       router.refresh();
     };
-
     window.addEventListener("popstate", handlePopState);
     return () => window.removeEventListener("popstate", handlePopState);
   }, [router]);
@@ -149,4 +148,230 @@ export function Chat({
         ) ?? false;
       return shouldContinue;
     },
-    transport: new DefaultChatTransport
+    transport: new DefaultChatTransport({
+      api: "/api/chat",
+      fetch: fetchWithErrorHandlers,
+      prepareSendMessagesRequest(request) {
+        const lastMessage = request.messages.at(-1);
+        const isToolApprovalContinuation =
+          lastMessage?.role !== "user" ||
+          request.messages.some((msg) =>
+            msg.parts?.some((part) => {
+              const state = (part as { state?: string }).state;
+              return state === "approval-responded" || state === "output-denied";
+            })
+          );
+
+        return {
+          body: {
+            id: request.id,
+            ...(isToolApprovalContinuation
+              ? { messages: request.messages }
+              : { message: lastMessage }),
+            selectedChatModel: currentModelIdRef.current,
+            selectedVisibilityType: visibilityType,
+            ...request.body,
+          },
+        };
+      },
+    }),
+    onData: (dataPart) => {
+      setDataStream((ds) => (ds ? [...ds, dataPart] : []));
+    },
+    onFinish: () => {
+      mutate(unstable_serialize(getChatHistoryPaginationKey));
+    },
+    onError: (error) => {
+      if (error instanceof ChatSDKError) {
+        if (error.message?.includes("AI Gateway requires a valid credit card")) {
+          setShowCreditCardAlert(true);
+        } else {
+          toast({
+            type: "error",
+            description: error.message,
+          });
+        }
+      }
+    },
+  });
+
+  const searchParams = useSearchParams();
+  const query = searchParams.get("query");
+  const [hasAppendedQuery, setHasAppendedQuery] = useState(false);
+
+  useEffect(() => {
+    if (query && !hasAppendedQuery) {
+      sendMessage({
+        role: "user" as const,
+        parts: [{ type: "text", text: query }],
+      });
+      setHasAppendedQuery(true);
+      window.history.replaceState({}, "", `/chat/${id}`);
+    }
+  }, [query, sendMessage, hasAppendedQuery, id]);
+
+  const { data: votes } = useSWR<Vote[]>(
+    messages.length >= 2 ? `/api/vote?chatId=${id}` : null,
+    fetcher
+  );
+
+  const [attachments, setAttachments] = useState<Attachment[]>([]);
+  const isArtifactVisible = useArtifactSelector((state) => state.isVisible);
+
+  useAutoResume({
+    autoResume,
+    initialMessages,
+    resumeStream,
+    setMessages,
+  });
+
+  const readinessTier: RiskTier = useMemo(() => {
+    return getLatestAssistantTier(messages);
+  }, [messages]);
+
+  const isEscalationVisible =
+    readinessTier === "HIGH" || readinessTier === "ESCALATING";
+
+  const contactUrl = "https://cosilsolutions.co.uk/contact/";
+  const mailto = "mailto:admin@cosilsolution.co.uk";
+  const telMobile = "tel:+447587065611";
+
+  return (
+    <>
+      <div className="overscroll-behavior-contain flex h-dvh min-w-0 touch-pan-y flex-col bg-background">
+        <ChatHeader
+          chatId={id}
+          isReadonly={isReadonly}
+          selectedVisibilityType={initialVisibilityType}
+        />
+
+        <Messages
+          addToolApprovalResponse={addToolApprovalResponse}
+          chatId={id}
+          isArtifactVisible={isArtifactVisible}
+          isReadonly={isReadonly}
+          messages={messages}
+          regenerate={regenerate}
+          selectedModelId={initialChatModel}
+          setMessages={setMessages}
+          status={status}
+          votes={votes}
+        />
+
+        {isEscalationVisible && (
+          <div className="mx-auto w-full max-w-4xl px-2 pb-2 md:px-4">
+            <div className="rounded-lg border bg-background p-4">
+              <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                <div className="text-sm">
+                  <div className="font-semibold text-zinc-900">
+                    {readinessTier === "HIGH"
+                      ? "Immediate consultation recommended"
+                      : "Structured consultation available"}
+                  </div>
+                  <div className="mt-1 text-zinc-500">
+                    {readinessTier === "HIGH"
+                      ? "This matter requires expert assessment without delay. Cosil provides structured intervention at this level of exposure."
+                      : "This assessment identifies risk and gaps that require expert input. Cosil provides structured case review and strategic support."}
+                  </div>
+                </div>
+
+                <div className="flex flex-wrap gap-2">
+                  <Button
+                    onClick={() => window.open(contactUrl, "_blank")}
+                  >
+                    Book a consultation
+                  </Button>
+                  <Button
+                    variant="outline"
+                    onClick={() => (window.location.href = mailto)}
+                  >
+                    Email Cosil
+                  </Button>
+                  <Button
+                    variant="outline"
+                    onClick={() => (window.location.href = telMobile)}
+                  >
+                    Call 07587 065 611
+                  </Button>
+                </div>
+              </div>
+
+              <div className="mt-3 text-xs text-zinc-400">
+                Cosil Solutions Ltd · admin@cosilsolution.co.uk · 07587 065 611
+              </div>
+            </div>
+          </div>
+        )}
+
+        <div className="sticky bottom-0 z-1 mx-auto flex w-full max-w-4xl gap-2 border-t-0 bg-background px-2 pb-3 md:px-4 md:pb-4">
+          {!isReadonly && (
+            <MultimodalInput
+              attachments={attachments}
+              chatId={id}
+              input={input}
+              messages={messages}
+              onModelChange={setCurrentModelId}
+              selectedModelId={currentModelId}
+              selectedVisibilityType={visibilityType}
+              sendMessage={sendMessage}
+              setAttachments={setAttachments}
+              setInput={setInput}
+              setMessages={setMessages}
+              status={status}
+              stop={stop}
+            />
+          )}
+        </div>
+      </div>
+
+      <Artifact
+        addToolApprovalResponse={addToolApprovalResponse}
+        attachments={attachments}
+        chatId={id}
+        input={input}
+        isReadonly={isReadonly}
+        messages={messages}
+        regenerate={regenerate}
+        selectedModelId={currentModelId}
+        selectedVisibilityType={visibilityType}
+        sendMessage={sendMessage}
+        setAttachments={setAttachments}
+        setInput={setInput}
+        setMessages={setMessages}
+        status={status}
+        stop={stop}
+        votes={votes}
+      />
+
+      <AlertDialog
+        onOpenChange={setShowCreditCardAlert}
+        open={showCreditCardAlert}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Activate AI Gateway</AlertDialogTitle>
+            <AlertDialogDescription>
+              This application requires{" "}
+              {process.env.NODE_ENV === "production" ? "the owner" : "you"} to
+              activate Vercel AI Gateway.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                window.open(
+                  "https://vercel.com/d?to=%2F%5Bteam%5D%2F%7E%2Fai%3Fmodal%3Dadd-credit-card",
+                  "_blank"
+                );
+                window.location.href = "/";
+              }}
+            >
+              Activate
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
+  );
+}
