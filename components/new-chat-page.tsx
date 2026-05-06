@@ -11,7 +11,7 @@ const ROLE_OPTIONS = [
   "Resident or tenant",
   "Leaseholder",
   "Property owner or landlord",
-  "Organisation",
+  "Business or organisation",
 ];
 
 const COMPLAINT_STAGE_OPTIONS = [
@@ -24,8 +24,11 @@ const COMPLAINT_STAGE_OPTIONS = [
 const FRAMEWORK_ANCHOR =
   "A structured diagnostic produced by Cosil Solutions Ltd, a strategic dispute and risk consultancy and accredited civil and commercial mediation practice.";
 
+const SCOPE_STATEMENT =
+  "Cosil works with individuals and organisations across all stages of a dispute, complaint, or risk matter.";
+
 function inferSegmentFromRole(role: string): "B2C" | "B2B" {
-  if (role === "Organisation") return "B2B";
+  if (role === "Business or organisation") return "B2B";
   if (role === "Property owner or landlord") return "B2B";
   return "B2C";
 }
@@ -41,10 +44,12 @@ export function NewChatPage() {
       <div className="mx-auto mt-16 max-w-2xl px-4">
         <h1 className="mb-2 text-2xl font-semibold">Dispute Readiness Check</h1>
 
-        <p className="mb-3 text-sm text-zinc-500">{FRAMEWORK_ANCHOR}</p>
+        <p className="mb-2 text-sm text-zinc-500">{FRAMEWORK_ANCHOR}</p>
 
-        <p className="mb-6 text-zinc-500">
-          Select the description that applies. The assessment will be calibrated accordingly.
+        <p className="mb-6 text-sm text-zinc-600">{SCOPE_STATEMENT}</p>
+
+        <p className="mb-4 text-zinc-500">
+          Select the description that applies.
         </p>
 
         <div className="grid gap-3">
