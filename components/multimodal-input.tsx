@@ -289,7 +289,7 @@ function PureMultimodalInput({
           if (!input.trim() && attachments.length === 0) return;
 
           if (status !== "ready") {
-            toast.error("Please wait for the model to finish its response!");
+            toast.error("Please wait for the assessment to finish.");
             return;
           }
 
@@ -330,7 +330,7 @@ function PureMultimodalInput({
             maxHeight={200}
             minHeight={44}
             onChange={handleInput}
-            placeholder="Describe your matter briefly. Include what has happened, where things stand, and any deadlines."
+            placeholder="Briefly describe what has happened, who is involved, the current stage, any deadline and what is becoming difficult to resolve."
             ref={textareaRef}
             rows={1}
             value={input}
