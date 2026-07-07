@@ -15,10 +15,10 @@ type SuggestedActionsProps = {
 
 function PureSuggestedActions({ chatId, sendMessage }: SuggestedActionsProps) {
   const suggestedActions = [
-    "My landlord is seeking possession and I am not sure the grounds are valid",
-    "I have reported damp and mould repeatedly and nothing has been done",
-    "The Housing Ombudsman has made a finding against my landlord and they are not complying",
-    "A formal grievance has been raised in my organisation and I am not sure how to respond",
+    "A housing complaint has become difficult to resolve and is absorbing officer time",
+    "A leaseholder dispute is escalating around service charges, repairs or major works",
+    "We need an independent review before an Ombudsman, tribunal or mediation step",
+    "A professional client needs structured dispute input alongside their legal or technical advice",
   ];
 
   return (
