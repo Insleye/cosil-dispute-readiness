@@ -115,7 +115,7 @@ export function Chat({
   const { setDataStream } = useDataStream();
 
   const [input, setInput] = useState<string>("");
-  const [showCreditCardAlert, setShowCreditCardAlert] = useState(false);
+  const [showServiceAlert, setShowServiceAlert] = useState(false);
   const [currentModelId, setCurrentModelId] = useState(initialChatModel);
   const currentModelIdRef = useRef(currentModelId);
 
@@ -184,7 +184,7 @@ export function Chat({
     onError: (error) => {
       if (error instanceof ChatSDKError) {
         if (error.message?.includes("AI Gateway requires a valid credit card")) {
-          setShowCreditCardAlert(true);
+          setShowServiceAlert(true);
         } else {
           toast({
             type: "error",
@@ -265,20 +265,18 @@ export function Chat({
                 <div className="text-sm">
                   <div className="font-semibold text-zinc-900">
                     {readinessTier === "HIGH"
-                      ? "Immediate consultation recommended"
-                      : "Structured consultation available"}
+                      ? "Consultation should be arranged urgently"
+                      : "Structured consultation is the sensible next step"}
                   </div>
                   <div className="mt-1 text-zinc-500">
                     {readinessTier === "HIGH"
-                      ? "This matter requires expert assessment without delay. Cosil provides structured intervention at this level of exposure."
-                      : "This assessment identifies risk and gaps that require expert input. Cosil provides structured case review and strategic support."}
+                      ? "The matter appears to carry enough exposure to justify prompt expert review and a clear route forward."
+                      : "The assessment has identified risk, uncertainty or escalation pressure that should be reviewed before the next decision is made."}
                   </div>
                 </div>
 
                 <div className="flex flex-wrap gap-2">
-                  <Button
-                    onClick={() => window.open(contactUrl, "_blank")}
-                  >
+                  <Button onClick={() => window.open(contactUrl, "_blank")}>
                     Book a consultation
                   </Button>
                   <Button
@@ -343,31 +341,22 @@ export function Chat({
         votes={votes}
       />
 
-      <AlertDialog
-        onOpenChange={setShowCreditCardAlert}
-        open={showCreditCardAlert}
-      >
+      <AlertDialog onOpenChange={setShowServiceAlert} open={showServiceAlert}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Activate AI Gateway</AlertDialogTitle>
+            <AlertDialogTitle>Readiness check temporarily unavailable</AlertDialogTitle>
             <AlertDialogDescription>
-              This application requires{" "}
-              {process.env.NODE_ENV === "production" ? "the owner" : "you"} to
-              activate Vercel AI Gateway.
+              The online check is not available at the moment. Please contact Cosil directly and include a short summary of the matter, any deadline and the current stage.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel>Close</AlertDialogCancel>
             <AlertDialogAction
               onClick={() => {
-                window.open(
-                  "https://vercel.com/d?to=%2F%5Bteam%5D%2F%7E%2Fai%3Fmodal%3Dadd-credit-card",
-                  "_blank"
-                );
-                window.location.href = "/";
+                window.location.href = mailto;
               }}
             >
-              Activate
+              Email Cosil
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
