@@ -8,40 +8,39 @@ import { generateUUID } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 
 const ROLE_OPTIONS = [
-  "Resident or tenant",
-  "Leaseholder",
-  "Property owner or landlord",
+  "Housing provider, managing agent or local authority",
+  "Professional adviser or referral partner",
   "Business or organisation",
+  "Resident, tenant or leaseholder",
+  "Property owner or landlord",
 ];
 
-const COMPLAINT_STAGE_OPTIONS = [
-  "Early stage, no formal complaint raised",
-  "Complaint raised, awaiting response",
-  "Complaint responded to, matter unresolved",
-  "Formal process underway or imminent deadline",
+const MATTER_STAGE_OPTIONS = [
+  "Early concern, no formal process started",
+  "Complaint, correspondence or internal review underway",
+  "Response received, matter remains unresolved",
+  "Ombudsman, tribunal, mediation, hearing or deadline approaching",
 ];
 
 const FRAMEWORK_ANCHOR =
-  "A structured diagnostic produced by Cosil Solutions Ltd, a strategic dispute and risk consultancy and accredited civil and commercial mediation practice.";
+  "A structured diagnostic from Cosil Solutions Ltd, a consultancy and accredited mediation practice for housing, property, complaints, governance, risk and dispute resolution matters.";
 
 const SCOPE_STATEMENT =
-  "Cosil works with individuals and organisations across all stages of a dispute, complaint, or risk matter.";
+  "Cosil helps organisations, businesses and individuals understand where a matter sits, what risk is forming and what proportionate route is needed next.";
 
 const EXAMPLE_MATTERS =
-  "Recent matters include possession disputes, Ombudsman findings, service charge challenges, damp and disrepair, workplace grievances, and commercial contract disputes.";
+  "Typical matters include escalated housing complaints, Ombudsman pressure, leasehold and service charge disputes, disrepair, governance concerns, mediation preparation, tribunal preparation and commercial disputes.";
 
 function inferSegmentFromRole(role: string): "B2C" | "B2B" {
-  if (role === "Business or organisation") return "B2B";
-  if (role === "Property owner or landlord") return "B2B";
-  return "B2C";
+  if (role === "Resident, tenant or leaseholder") return "B2C";
+  return "B2B";
 }
 
 export function NewChatPage() {
   const [userRole, setUserRole] = useState<string | null>(null);
-  const [complaintStage, setComplaintStage] = useState<string | null>(null);
+  const [matterStage, setMatterStage] = useState<string | null>(null);
   const id = generateUUID();
 
-  // STEP 1 — Role selection
   if (!userRole) {
     return (
       <div className="mx-auto mt-16 max-w-2xl px-4">
@@ -54,7 +53,7 @@ export function NewChatPage() {
         <p className="mb-6 text-xs text-zinc-400">{EXAMPLE_MATTERS}</p>
 
         <p className="mb-4 text-zinc-500">
-          Select the description that applies.
+          Select the description closest to your position.
         </p>
 
         <div className="grid gap-3">
@@ -62,7 +61,7 @@ export function NewChatPage() {
             <Button
               key={role}
               variant="outline"
-              className="justify-start"
+              className="h-auto justify-start whitespace-normal py-3 text-left"
               onClick={() => setUserRole(role)}
             >
               {role}
@@ -71,14 +70,13 @@ export function NewChatPage() {
         </div>
 
         <p className="mt-6 text-xs text-zinc-400">
-          This tool produces a position and risk assessment. It does not constitute legal or professional advice.
+          This check gives an initial diagnostic view. It does not replace a formal instruction, legal advice or mediation appointment.
         </p>
       </div>
     );
   }
 
-  // STEP 2 — Stage selection
-  if (!complaintStage) {
+  if (!matterStage) {
     return (
       <div className="mx-auto mt-16 max-w-2xl px-4">
         <h1 className="mb-2 text-2xl font-semibold">Stage of the matter</h1>
@@ -86,16 +84,16 @@ export function NewChatPage() {
         <p className="mb-3 text-sm text-zinc-500">{FRAMEWORK_ANCHOR}</p>
 
         <p className="mb-6 text-zinc-500">
-          Indicate the current stage of the matter.
+          Indicate where the matter currently sits.
         </p>
 
         <div className="grid gap-3">
-          {COMPLAINT_STAGE_OPTIONS.map((stage) => (
+          {MATTER_STAGE_OPTIONS.map((stage) => (
             <Button
               key={stage}
               variant="outline"
-              className="justify-start text-left"
-              onClick={() => setComplaintStage(stage)}
+              className="h-auto justify-start whitespace-normal py-3 text-left"
+              onClick={() => setMatterStage(stage)}
             >
               {stage}
             </Button>
@@ -107,7 +105,7 @@ export function NewChatPage() {
           className="mt-4"
           onClick={() => setUserRole(null)}
         >
-          ← Back
+          Back
         </Button>
       </div>
     );
@@ -115,7 +113,6 @@ export function NewChatPage() {
 
   const segment = inferSegmentFromRole(userRole);
 
-  // STEP 3 — Show chat with context
   const initialMessages = [
     {
       id: generateUUID(),
@@ -126,7 +123,7 @@ export function NewChatPage() {
           text: `Assessment input.
 Role: ${userRole}
 Segment: ${segment}
-Stage: ${complaintStage}
+Stage: ${matterStage}
 
 Description of the matter follows.`,
         },
