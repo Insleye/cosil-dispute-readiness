@@ -8,24 +8,27 @@ import { SessionProvider } from "next-auth/react";
 export const metadata: Metadata = {
   metadataBase: new URL("https://cosil-dispute-readiness.vercel.app"),
   title: "Dispute Readiness Check | Cosil Solutions Ltd",
-  description: "A structured position and risk assessment for housing, leasehold, workplace, employment, and commercial disputes. Produced by Cosil Solutions Ltd, a strategic dispute and risk consultancy and accredited civil and commercial mediation practice.",
+  description:
+    "A structured diagnostic for housing, property, complaints, governance, mediation, tribunal preparation and dispute risk matters. Produced by Cosil Solutions Ltd, a consultancy and accredited mediation practice.",
   keywords: [
     "dispute resolution",
     "mediation",
     "housing dispute",
+    "property dispute",
     "leasehold dispute",
     "service charge dispute",
-    "workplace grievance",
     "Housing Ombudsman",
-    "Awaab's Law",
-    "commercial dispute",
+    "complaint handling",
+    "tribunal preparation",
+    "governance risk",
     "dispute readiness",
     "Cosil Solutions",
   ],
   authors: [{ name: "Cosil Solutions Ltd", url: "https://cosilsolutions.co.uk" }],
   openGraph: {
     title: "Dispute Readiness Check | Cosil Solutions Ltd",
-    description: "Not sure where your matter sits or what to do next? Get a structured position and risk assessment from Cosil Solutions Ltd.",
+    description:
+      "Understand where a matter sits, what risk is forming and what proportionate route may be needed next.",
     url: "https://cosil-dispute-readiness.vercel.app",
     siteName: "Cosil Solutions Ltd",
     locale: "en_GB",
@@ -34,7 +37,8 @@ export const metadata: Metadata = {
   twitter: {
     card: "summary",
     title: "Dispute Readiness Check | Cosil Solutions Ltd",
-    description: "Not sure where your matter sits or what to do next? Get a structured position and risk assessment from Cosil Solutions Ltd.",
+    description:
+      "Understand where a matter sits, what risk is forming and what proportionate route may be needed next.",
   },
   robots: {
     index: true,
