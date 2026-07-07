@@ -46,15 +46,15 @@ export function AppSidebar({ user }: { user: User | undefined }) {
     });
 
     toast.promise(deletePromise, {
-      loading: "Deleting all chats...",
+      loading: "Deleting saved checks...",
       success: () => {
         mutate(unstable_serialize(getChatHistoryPaginationKey));
         setShowDeleteAllDialog(false);
         router.replace("/");
         router.refresh();
-        return "All chats deleted successfully";
+        return "Saved checks deleted";
       },
-      error: "Failed to delete all chats",
+      error: "Failed to delete saved checks",
     });
   };
 
@@ -72,7 +72,7 @@ export function AppSidebar({ user }: { user: User | undefined }) {
                 }}
               >
                 <span className="cursor-pointer rounded-md px-2 font-semibold text-lg hover:bg-muted">
-                  Chatbot
+                  Cosil Readiness
                 </span>
               </Link>
               <div className="flex flex-row gap-1">
@@ -89,7 +89,7 @@ export function AppSidebar({ user }: { user: User | undefined }) {
                       </Button>
                     </TooltipTrigger>
                     <TooltipContent align="end" className="hidden md:block">
-                      Delete All Chats
+                      Delete saved checks
                     </TooltipContent>
                   </Tooltip>
                 )}
@@ -109,7 +109,7 @@ export function AppSidebar({ user }: { user: User | undefined }) {
                     </Button>
                   </TooltipTrigger>
                   <TooltipContent align="end" className="hidden md:block">
-                    New Chat
+                    New readiness check
                   </TooltipContent>
                 </Tooltip>
               </div>
@@ -128,16 +128,15 @@ export function AppSidebar({ user }: { user: User | undefined }) {
       >
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete all chats?</AlertDialogTitle>
+            <AlertDialogTitle>Delete saved checks?</AlertDialogTitle>
             <AlertDialogDescription>
-              This action cannot be undone. This will permanently delete all
-              your chats and remove them from our servers.
+              This action cannot be undone. It will permanently delete the saved readiness checks on this account.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction onClick={handleDeleteAll}>
-              Delete All
+              Delete all
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
