@@ -184,11 +184,15 @@ export function ReadinessAssessment({
           <h2 className="text-lg font-semibold">What you can do next</h2>
           <div className="mt-4 grid gap-4 sm:grid-cols-2">
             <div className="rounded-xl border p-5">
-              <h3 className="font-semibold">Explore Cosil Membership</h3>
-              <p className="mt-2 text-sm text-zinc-600">For ongoing community, insight and discussion as your situation develops.</p>
+              <h3 className="font-semibold">Cosil Membership — coming soon</h3>
+              <p className="mt-2 text-sm text-zinc-600">Join Cosil Dispute Watch on WhatsApp for updates, and add your name to the waitlist to be first in when membership launches.</p>
+              <div className="mt-4 flex flex-wrap gap-2">
+                <Button asChild variant="outline"><a href="https://whatsapp.com/channel/0029VbDYUmFJf05lwkozbZ01" target="_blank" rel="noreferrer">Join Cosil Dispute Watch</a></Button>
+                <Button asChild><a href="/membership-waitlist">Join the waitlist</a></Button>
+              </div>
             </div>
             <div className="rounded-xl border p-5">
-              <h3 className="font-semibold">Discuss individual support</h3>
+              <h3 className="font-semibold">Explore further support</h3>
               <p className="mt-2 text-sm text-zinc-600">For Cosil to look specifically at your circumstances.</p>
             </div>
           </div>
