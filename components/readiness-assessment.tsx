@@ -12,6 +12,7 @@ type DimensionKey =
   | "preparedness";
 type Band = "Needs Attention" | "Developing" | "Established";
 type Dimension = { key: DimensionKey; label: string };
+type DimensionIntroduction = { heading: string; body: string };
 type Question = {
   id: string;
   dimension: DimensionKey;
@@ -27,10 +28,12 @@ function bandFor(score: number): Band {
 
 export function ReadinessAssessment({
   dimensions,
+  dimensionIntroductions,
   questions,
   complexityFlags,
 }: {
   dimensions: readonly Dimension[];
+  dimensionIntroductions: Record<DimensionKey, DimensionIntroduction>;
   questions: readonly Question[];
   complexityFlags: readonly string[];
 }) {
@@ -101,6 +104,8 @@ export function ReadinessAssessment({
   if (questionIndex < questions.length) {
     const question = questions[questionIndex];
     const dimension = dimensions.find((item) => item.key === question.dimension)?.label;
+    const intro = dimensionIntroductions[question.dimension];
+    const isDimensionStart = questionIndex === 0 || questions[questionIndex - 1].dimension !== question.dimension;
     return (
       <main className="mx-auto max-w-3xl px-4 py-10 sm:py-14">
         <div className="mb-6 flex items-center justify-between text-sm text-zinc-500">
@@ -110,6 +115,13 @@ export function ReadinessAssessment({
         <div className="mb-8 h-2 overflow-hidden rounded-full bg-zinc-100 dark:bg-zinc-800">
           <div className="h-full bg-foreground transition-all" style={{ width: `${((questionIndex + 1) / questions.length) * 100}%` }} />
         </div>
+        {isDimensionStart ? (
+          <section className="mb-5 rounded-2xl border bg-zinc-50 p-5 dark:bg-zinc-900 sm:p-6">
+            <p className="text-xs font-semibold uppercase tracking-wider text-zinc-500">The Cosil lens</p>
+            <h2 className="mt-2 text-xl font-semibold">{intro.heading}</h2>
+            <p className="mt-3 leading-7 text-zinc-600 dark:text-zinc-300">{intro.body}</p>
+          </section>
+        ) : null}
         <section className="rounded-2xl border bg-background p-6 shadow-sm sm:p-8">
           <h2 className="text-xl font-semibold leading-8">{question.prompt}</h2>
           <div className="mt-6 grid gap-3">
