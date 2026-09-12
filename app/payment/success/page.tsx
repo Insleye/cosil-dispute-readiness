@@ -1,6 +1,7 @@
+import { Suspense } from "react";
 import { PaymentConfirmation } from "@/components/payment-confirmation";
 
-export default async function PaymentSuccessPage({
+async function PaymentSuccessContent({
   searchParams,
 }: {
   searchParams: Promise<{ session_id?: string }>;
@@ -21,4 +22,24 @@ export default async function PaymentSuccessPage({
   }
 
   return <PaymentConfirmation sessionId={sessionId} />;
+}
+
+export default function PaymentSuccessPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ session_id?: string }>;
+}) {
+  return (
+    <Suspense
+      fallback={
+        <main className="mx-auto max-w-2xl px-4 py-16">
+          <div className="rounded-2xl border bg-background p-8 shadow-sm">
+            <p className="text-zinc-600">Confirming payment…</p>
+          </div>
+        </main>
+      }
+    >
+      <PaymentSuccessContent searchParams={searchParams} />
+    </Suspense>
+  );
 }
