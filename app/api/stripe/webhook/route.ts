@@ -1,8 +1,6 @@
 import { createHmac, timingSafeEqual } from "node:crypto";
 import { recordVerifiedReadinessPayment } from "@/lib/readiness-access";
 
-export const runtime = "nodejs";
-
 function verifyStripeSignature(payload: string, header: string, secret: string) {
   const parts = header.split(",");
   const timestamp = parts.find((part) => part.startsWith("t="))?.slice(2);
