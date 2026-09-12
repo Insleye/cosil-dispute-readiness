@@ -34,13 +34,13 @@ export default async function Page() {
       <div className="rounded-2xl border bg-background p-6 shadow-sm sm:p-10">
         <p className="mb-3 text-sm font-medium text-zinc-500">Cosil Solutions Ltd</p>
         <h1 className="text-3xl font-semibold tracking-tight">
-          Enhanced Dispute Readiness Check
+          Dispute Readiness Guide
         </h1>
         <p className="mt-4 text-zinc-600">
-          Understand how prepared you currently are to deal with a dispute across six areas of readiness.
+          Get a clearer view of your dispute before deciding what comes next. The Guide helps you step back from the immediate pressure, see the matter across six areas of readiness, and identify where your position feels clear and where there may be gaps worth thinking about.
         </p>
         <div className="mt-6 rounded-xl border bg-zinc-50 p-4 text-sm text-zinc-600 dark:bg-zinc-900">
-          One-off access: <strong>£24.99</strong>. The check is diagnostic and reflective. It does not provide legal advice or tell you what action to take.
+          One-off access: <strong>£24.99</strong>. Work through a structured set of questions designed to help you look at the dispute differently, organise your thinking and leave with a clearer picture of how ready you are to deal with what is in front of you.
         </div>
 
         {paymentLink ? (
