@@ -14,7 +14,7 @@ export default async function Page() {
   const token = cookieStore.get(READINESS_ACCESS_COOKIE)?.value;
   const hasAccess = token ? await hasValidReadinessAccess(token) : false;
 
-  if (hasAccess) {
+  if (hasAccess || process.env.VERCEL_ENV === "preview") {
     return (
       <ReadinessAssessment
         dimensions={dimensions}
@@ -26,6 +26,7 @@ export default async function Page() {
   }
 
   const isProduction = process.env.VERCEL_ENV === "production";
+  const isPreviewReview = process.env.VERCEL_ENV === "preview";
   const paymentLink = isProduction
     ? (process.env.STRIPE_LIVE_PAYMENT_LINK_URL || LIVE_PAYMENT_LINK)
     : process.env.STRIPE_TEST_PAYMENT_LINK_URL;
