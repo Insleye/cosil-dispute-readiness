@@ -5,8 +5,6 @@ import {
   READINESS_ACCESS_COOKIE,
 } from "@/lib/readiness-access";
 
-export const runtime = "nodejs";
-
 export async function GET(request: Request) {
   const url = new URL(request.url);
   const sessionId = url.searchParams.get("session_id");
