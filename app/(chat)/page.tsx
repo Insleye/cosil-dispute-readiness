@@ -5,7 +5,7 @@ import {
   hasValidReadinessAccess,
   READINESS_ACCESS_COOKIE,
 } from "@/lib/readiness-access";
-import { complexityFlags, dimensions, questions } from "@/lib/readiness-content";
+import { complexityFlags, dimensionIntroductions, dimensions, questions } from "@/lib/readiness-content";
 
 const LIVE_PAYMENT_LINK = "https://buy.stripe.com/fZucN6e1z2Kc0spdyo5gc00";
 
@@ -18,6 +18,7 @@ export default async function Page() {
     return (
       <ReadinessAssessment
         dimensions={dimensions}
+        dimensionIntroductions={dimensionIntroductions}
         questions={questions}
         complexityFlags={complexityFlags}
       />
