@@ -193,7 +193,10 @@ export function ReadinessAssessment({
             </div>
             <div className="rounded-xl border p-5">
               <h3 className="font-semibold">Explore further support</h3>
-              <p className="mt-2 text-sm text-zinc-600">For Cosil to look specifically at your circumstances.</p>
+              <p className="mt-2 text-sm text-zinc-600">For Cosil to look specifically at your circumstances. Dispute Strategy Consultations start from £395, depending on the nature, complexity and scope of the matter.</p>
+              <div className="mt-4">
+                <Button asChild><a href="https://cosilsolutions.co.uk/" target="_blank" rel="noreferrer">Explore further support</a></Button>
+              </div>
             </div>
           </div>
         </div>
