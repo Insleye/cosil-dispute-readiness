@@ -71,6 +71,13 @@
       "when": 1789173000000,
       "tag": "0009_readiness_payment_access",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1789234200000,
+      "tag": "0010_membership_waitlist",
+      "breakpoints": true
     }
   ]
 }
