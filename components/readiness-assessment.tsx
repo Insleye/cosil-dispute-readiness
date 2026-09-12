@@ -82,12 +82,12 @@ export function ReadinessAssessment({
       <main className="mx-auto max-w-3xl px-4 py-12 sm:py-16">
         <div className="rounded-2xl border bg-background p-6 shadow-sm sm:p-10">
           <p className="mb-3 text-sm font-medium text-zinc-500">Cosil Solutions Ltd</p>
-          <h1 className="text-3xl font-semibold tracking-tight">Enhanced Dispute Readiness Check</h1>
+          <h1 className="text-3xl font-semibold tracking-tight">Dispute Readiness Guide</h1>
           <p className="mt-4 text-zinc-600">
-            A structured self-assessment to help you understand how prepared you are to deal with a dispute.
+            A structured guide to help you step back from the immediate dispute, test how clear your current position really is and see the matter through six areas of readiness.
           </p>
           <div className="mt-6 rounded-xl border bg-zinc-50 p-4 text-sm text-zinc-600 dark:bg-zinc-900">
-            This check is diagnostic and reflective only. It does not assess legal merit, recommend a route or provide legal advice.
+            By the end, you will have a clearer readiness profile showing where your thinking is established and where there may be gaps to consider before your next decision.
           </div>
           <div className="mt-8 flex flex-wrap items-center gap-3">
             <Button onClick={() => setStarted(true)}>Start assessment</Button>
