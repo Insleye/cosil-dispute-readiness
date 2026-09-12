@@ -9,6 +9,33 @@ export const dimensions = [
   { key: "preparedness", label: "Preparedness" },
 ] as const;
 
+export const dimensionIntroductions = {
+  issuePosition: {
+    heading: "Separate the dispute from the story around it",
+    body: "Disputes become harder to assess when the original issue, later events, assumptions and positions taken begin to merge. Cosil starts by separating those layers. This section tests whether the dispute itself is sufficiently clear before anything is decided about it."
+  },
+  evidenceInformation: {
+    heading: "Test what the information actually establishes",
+    body: "Having a large file is not the same as having a clear evidential picture. Cosil looks at whether the available material tells a coherent story, what rests on record rather than recollection, and where uncertainty remains. This section tests the strength of that picture without assessing the merits of your case."
+  },
+  exposureStakes: {
+    heading: "Look beyond the headline issue",
+    body: "The amount, complaint or event at the centre of a dispute may be only one part of the exposure. Time, relationships, future dealings, governance, reputation and the consequences of delay can matter too. This section tests how widely you are currently seeing what is at stake."
+  },
+  actionsEscalation: {
+    heading: "Identify what has changed the dispute",
+    body: "Not every email, meeting or event carries equal weight. Some actions change tone, narrow positions, introduce formality or become turning points. Cosil examines the dispute as a developing sequence, not simply a chronology. This section tests how clearly you can see that progression."
+  },
+  optionsAwareness: {
+    heading: "See the decision landscape, not just the obvious route",
+    body: "A dispute can feel as though it has only one next step, particularly once positions harden. Cosil tests whether the available landscape is understood before strategy is considered. This section examines your awareness of the different ways a matter may be managed, without selecting a route for you."
+  },
+  preparedness: {
+    heading: "Move from reaction to a decision-ready view",
+    body: "Being immersed in a dispute can make the latest development feel like the whole problem. Readiness requires enough distance to distinguish what is established, what remains uncertain and what factors genuinely matter to the next decision. This section tests whether you can currently see the matter at that level."
+  },
+} as const;
+
 export const questions = [
   // ISSUE & POSITION: tests whether the user has separated the dispute itself from the surrounding history, assumptions and emotion.
   { id:"q1_1", dimension:"issuePosition", prompt:"If you had to explain the dispute to someone with no prior knowledge, how clearly could you identify the central issue without relying on the wider history?", options:[["I would struggle to separate the central issue from everything that has happened",0],["I can identify the main issue, although other matters still overlap with it",1],["I can identify the central issue and distinguish it from the wider history",2]] },
