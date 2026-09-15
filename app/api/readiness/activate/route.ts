@@ -22,7 +22,7 @@ export async function GET(request: Request) {
     .join("=");
 
   if (token && await hasValidReadinessAccess(decodeURIComponent(token))) {
-    return NextResponse.json({ status: "ready" });
+    return NextResponse.redirect(new URL("/", request.url));
   }
 
   const result = await activateReadinessPayment(sessionId);
@@ -33,7 +33,7 @@ export async function GET(request: Request) {
     return NextResponse.json({ status: "used" }, { status: 409 });
   }
 
-  const response = NextResponse.json({ status: "ready" });
+  const response = NextResponse.redirect(new URL("/", request.url));
   response.cookies.set(READINESS_ACCESS_COOKIE, result.token, {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
