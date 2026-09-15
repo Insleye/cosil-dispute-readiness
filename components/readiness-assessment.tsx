@@ -946,7 +946,7 @@ export function ReadinessAssessment({
               </p>
               <Button asChild className="mt-4">
                 <a
-                  href="https://cosilsolutions.co.uk/"
+                  href="https://cosilsolutions.co.uk/dispute-strategy-consultation/"
                   target="_blank"
                   rel="noreferrer"
                 >
