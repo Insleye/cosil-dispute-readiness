@@ -1,28 +1,46 @@
 import { NextResponse } from "next/server";
-import { z } from "zod";
 import { saveWaitlistSubmission, sendWaitlistNotification } from "@/lib/membership-waitlist";
 
-const schema = z.object({
-  name: z.string().trim().min(2).max(160),
-  email: z.string().trim().email().max(254),
-  phone: z.string().trim().min(6).max(40),
-  consent: z.literal(true),
-});
-
 export async function POST(request: Request) {
-  const parsed = schema.safeParse(await request.json().catch(() => null));
-  if (!parsed.success) {
-    return NextResponse.json({ error: "Please check the information entered." }, { status: 400 });
-  }
-
-  const { name, email, phone } = parsed.data;
-  await saveWaitlistSubmission({ name, email, phone });
-
   try {
-    await sendWaitlistNotification({ name, email, phone });
-  } catch (error) {
-    console.error("Waitlist notification failed", error);
-  }
+    const body = await request.json();
+    const name = String(body.name || "").trim();
+    const email = String(body.email || "").trim();
+    const phone = String(body.phone || "").trim();
+    const consent = body.consent === true;
 
-  return NextResponse.json({ ok: true });
+    if (!name || !email || !consent) {
+      return NextResponse.json(
+        { error: "Please provide your name and email and confirm consent." },
+        { status: 400 }
+      );
+    }
+
+    const submission = { name, email, phone };
+    await saveWaitlistSubmission(submission);
+
+    // Registration is complete once the database save succeeds.
+    // Email is attempted afterwards, but a mail issue must not undo registration.
+    try {
+      const mail = await sendWaitlistNotification(submission);
+      if (!mail.configured) {
+        console.error("Membership waitlist email is not configured: check MS_GRAPH_* and sender environment variables.");
+      } else {
+        console.info("Membership waitlist notification and customer confirmation email processed."); // env refresh
+      }
+    } catch (error) {
+      console.error("Membership waitlist email delivery failed", error);
+    }
+
+    return NextResponse.json({
+      ok: true,
+      message: "You're on the Cosil Membership waitlist.",
+    });
+  } catch (error) {
+    console.error("Membership waitlist submission failed", error);
+    return NextResponse.json(
+      { error: "We could not add you to the waitlist. Please try again." },
+      { status: 500 }
+    );
+  }
 }

@@ -1,5 +1,6 @@
 import { createHmac, timingSafeEqual } from "node:crypto";
 import { recordVerifiedReadinessPayment } from "@/lib/readiness-access";
+import { checkoutSessionContainsPrice } from "@/lib/stripe";
 
 function verifyStripeSignature(payload: string, header: string, secret: string) {
   const parts = header.split(",");
@@ -23,16 +24,6 @@ function verifyStripeSignature(payload: string, header: string, secret: string) 
       return false;
     }
   });
-}
-
-async function sessionContainsReadinessPrice(sessionId: string, priceId: string, secretKey: string) {
-  const response = await fetch(
-    `https://api.stripe.com/v1/checkout/sessions/${encodeURIComponent(sessionId)}/line_items?limit=100`,
-    { headers: { Authorization: `Bearer ${secretKey}` }, cache: "no-store" }
-  );
-  if (!response.ok) return false;
-  const body = await response.json() as { data?: Array<{ price?: { id?: string } }> };
-  return body.data?.some((item) => item.price?.id === priceId) ?? false;
 }
 
 export async function POST(request: Request) {
@@ -63,7 +54,7 @@ export async function POST(request: Request) {
     return Response.json({ received: true });
   }
 
-  const matches = await sessionContainsReadinessPrice(session.id, readinessPriceId, secretKey);
+  const matches = await checkoutSessionContainsPrice(session.id, readinessPriceId, secretKey);
   if (!matches) {
     return new Response("Checkout did not contain the configured readiness price", { status: 400 });
   }

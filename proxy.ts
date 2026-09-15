@@ -13,7 +13,13 @@ export async function proxy(request: NextRequest) {
     return new Response("pong", { status: 200 });
   }
 
-  if (pathname.startsWith("/api/auth")) {
+  // Public endpoints that must work before a user has an application session.
+  // Stripe signs webhook POSTs, so redirecting them through guest auth breaks signature verification.
+  if (
+    pathname.startsWith("/api/auth") ||
+    pathname === "/api/stripe/webhook" ||
+    pathname === "/api/readiness/activate"
+  ) {
     return NextResponse.next();
   }
 
