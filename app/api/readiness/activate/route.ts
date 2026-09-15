@@ -5,11 +5,76 @@ import {
   READINESS_ACCESS_COOKIE,
 } from "@/lib/readiness-access";
 
+type ActivationStatus = "invalid" | "pending" | "used" | "ready";
+
+const STATUS_HTTP_CODE: Record<ActivationStatus, number> = {
+  invalid: 400,
+  pending: 202,
+  used: 409,
+  ready: 200,
+};
+
+/**
+ * True when this request is a real browser navigating here directly (e.g.
+ * Stripe's Payment Link success_url pointing straight at this endpoint),
+ * false when it's a fetch() call polling for status from the payment
+ * confirmation page's own JavaScript.
+ *
+ * A top-level browser navigation sends "text/html" as its primary Accept
+ * type; a bare fetch() call (as used by components/payment-confirmation.tsx)
+ * does not. This is the same heuristic used to detect e.g. HTMX requests.
+ */
+function isBrowserNavigation(request: Request) {
+  const accept = request.headers.get("accept") ?? "";
+  return accept.includes("text/html");
+}
+
 export async function GET(request: Request) {
   const url = new URL(request.url);
   const sessionId = url.searchParams.get("session_id");
+  const asHtml = isBrowserNavigation(request);
+
+  function respond(
+    status: ActivationStatus,
+    cookie?: { token: string; maxAge: number }
+  ) {
+    if (asHtml) {
+      // A customer must never land on this endpoint and see raw JSON.
+      // Send them to the human-readable confirmation page instead, which
+      // polls this same endpoint via fetch() in the background and shows
+      // a proper message for every status, including a retry experience
+      // while payment is still confirming.
+      const redirectUrl = sessionId
+        ? new URL(`/payment/success?session_id=${encodeURIComponent(sessionId)}`, request.url)
+        : new URL("/payment/success", request.url);
+      const response = NextResponse.redirect(redirectUrl);
+      if (cookie) {
+        response.cookies.set(READINESS_ACCESS_COOKIE, cookie.token, {
+          httpOnly: true,
+          secure: process.env.NODE_ENV === "production",
+          sameSite: "lax",
+          path: "/",
+          maxAge: cookie.maxAge,
+        });
+      }
+      return response;
+    }
+
+    const response = NextResponse.json({ status }, { status: STATUS_HTTP_CODE[status] });
+    if (cookie) {
+      response.cookies.set(READINESS_ACCESS_COOKIE, cookie.token, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "lax",
+        path: "/",
+        maxAge: cookie.maxAge,
+      });
+    }
+    return response;
+  }
+
   if (!sessionId || !sessionId.startsWith("cs_")) {
-    return NextResponse.json({ status: "invalid" }, { status: 400 });
+    return respond("invalid");
   }
 
   const cookieHeader = request.headers.get("cookie") ?? "";
@@ -22,33 +87,14 @@ export async function GET(request: Request) {
     .join("=");
 
   if (token && await hasValidReadinessAccess(decodeURIComponent(token))) {
-    return NextResponse.json({ status: "ready" });
+    return respond("ready");
   }
 
   const result = await activateReadinessPayment(sessionId);
 
-  if (result.status === "pending") {
-    return NextResponse.json({ status: "pending" }, { status: 202 });
-  }
-  if (result.status === "used") {
-    return NextResponse.json({ status: "used" }, { status: 409 });
-  }
-  if (result.status === "invalid") {
-    return NextResponse.json({ status: "invalid" }, { status: 400 });
+  if (result.status !== "ready") {
+    return respond(result.status);
   }
 
-  // Returning JSON here (rather than a redirect) matters: this endpoint is
-  // polled with fetch() from the payment confirmation page. A redirect
-  // response gets silently followed by fetch and returns HTML instead of
-  // JSON, so the caller can never actually detect success. The client
-  // performs the navigation itself once it sees "ready".
-  const response = NextResponse.json({ status: "ready" });
-  response.cookies.set(READINESS_ACCESS_COOKIE, result.token, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "lax",
-    path: "/",
-    maxAge: result.maxAge,
-  });
-  return response;
+  return respond("ready", { token: result.token, maxAge: result.maxAge });
 }
