@@ -136,9 +136,9 @@ function buildAnalysis(
   const established = bands.filter((item) => item.band === "Established");
   const developing = bands.filter((item) => item.band === "Developing");
   const needs = bands.filter((item) => item.band === "Needs Attention");
-  const complexityFactors = flags
-    .map((value, index) => (value ? complexityLabels[index] : null))
-    .filter((value): value is string => Boolean(value));
+  const complexityFactors: string[] = flags.flatMap((value, index) =>
+    value && complexityLabels[index] ? [complexityLabels[index]] : []
+  );
 
   let profileSummary: string;
   if (established.length >= 5) {
