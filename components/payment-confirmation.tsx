@@ -13,6 +13,7 @@ export function PaymentConfirmation({ sessionId }: { sessionId: string }) {
       attempts += 1;
       const response = await fetch(`/api/readiness/activate?session_id=${encodeURIComponent(sessionId)}`, {
         cache: "no-store",
+        headers: { Accept: "application/json" },
       });
       const data = await response.json().catch(() => ({}));
 
