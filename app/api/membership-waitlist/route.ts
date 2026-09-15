@@ -26,7 +26,7 @@ export async function POST(request: Request) {
       if (!mail.configured) {
         console.error("Membership waitlist email is not configured: check MS_GRAPH_* and sender environment variables.");
       } else {
-        console.info("Membership waitlist notification and customer confirmation email processed.");
+        console.info("Membership waitlist notification and customer confirmation email processed."); // env refresh
       }
     } catch (error) {
       console.error("Membership waitlist email delivery failed", error);
