@@ -1,11 +1,12 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import { FormEvent, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 
 export function MembershipWaitlistForm() {
   const [status, setStatus] = useState<"idle"|"sending"|"success"|"error">("idle");
   const [error, setError] = useState("");
+  const formRef = useRef<HTMLFormElement>(null);
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -34,7 +35,7 @@ export function MembershipWaitlistForm() {
         setStatus("error");
         return;
       }
-      event.currentTarget.reset();
+      formRef.current?.reset();
       setStatus("success");
     } catch {
       setError("Your submission is taking longer than expected to confirm. Please check your email before submitting again. If no confirmation arrives, please try again.");
@@ -56,7 +57,7 @@ export function MembershipWaitlistForm() {
   }
 
   return (
-    <form onSubmit={submit} className="grid gap-5">
+    <form ref={formRef} onSubmit={submit} className="grid gap-5">
       <label className="grid gap-2 text-sm font-medium">
         Name
         <input name="name" required minLength={2} maxLength={160} className="rounded-lg border bg-background px-3 py-3 font-normal" autoComplete="name" />
