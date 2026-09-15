@@ -19,12 +19,18 @@ export async function POST(request: Request) {
     const submission = { name, email, phone };
     await saveWaitlistSubmission(submission);
 
-    // The database save is the authoritative waitlist registration.
-    // Return success immediately so email delivery cannot make the customer
-    // wait or produce a false failure message.
-    void sendWaitlistNotification(submission).catch((error) => {
-      console.error("Membership waitlist email notification failed", error);
-    });
+    // Registration is complete once the database save succeeds.
+    // Email is attempted afterwards, but a mail issue must not undo registration.
+    try {
+      const mail = await sendWaitlistNotification(submission);
+      if (!mail.configured) {
+        console.error("Membership waitlist email is not configured: check MS_GRAPH_* and sender environment variables.");
+      } else {
+        console.info("Membership waitlist notification and customer confirmation email processed.");
+      }
+    } catch (error) {
+      console.error("Membership waitlist email delivery failed", error);
+    }
 
     return NextResponse.json({
       ok: true,
