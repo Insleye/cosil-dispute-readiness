@@ -1,28 +1,40 @@
 import { NextResponse } from "next/server";
-import { z } from "zod";
 import { saveWaitlistSubmission, sendWaitlistNotification } from "@/lib/membership-waitlist";
 
-const schema = z.object({
-  name: z.string().trim().min(2).max(160),
-  email: z.string().trim().email().max(254),
-  phone: z.string().trim().min(6).max(40),
-  consent: z.literal(true),
-});
-
 export async function POST(request: Request) {
-  const parsed = schema.safeParse(await request.json().catch(() => null));
-  if (!parsed.success) {
-    return NextResponse.json({ error: "Please check the information entered." }, { status: 400 });
-  }
-
-  const { name, email, phone } = parsed.data;
-  await saveWaitlistSubmission({ name, email, phone });
-
   try {
-    await sendWaitlistNotification({ name, email, phone });
-  } catch (error) {
-    console.error("Waitlist notification failed", error);
-  }
+    const body = await request.json();
+    const name = String(body.name || "").trim();
+    const email = String(body.email || "").trim();
+    const phone = String(body.phone || "").trim();
+    const consent = body.consent === true;
 
-  return NextResponse.json({ ok: true });
+    if (!name || !email || !consent) {
+      return NextResponse.json(
+        { error: "Please provide your name and email and confirm consent." },
+        { status: 400 }
+      );
+    }
+
+    const submission = { name, email, phone };
+    await saveWaitlistSubmission(submission);
+
+    // The database save is the authoritative waitlist registration.
+    // Return success immediately so email delivery cannot make the customer
+    // wait or produce a false failure message.
+    void sendWaitlistNotification(submission).catch((error) => {
+      console.error("Membership waitlist email notification failed", error);
+    });
+
+    return NextResponse.json({
+      ok: true,
+      message: "You're on the Cosil Membership waitlist.",
+    });
+  } catch (error) {
+    console.error("Membership waitlist submission failed", error);
+    return NextResponse.json(
+      { error: "We could not add you to the waitlist. Please try again." },
+      { status: 500 }
+    );
+  }
 }
