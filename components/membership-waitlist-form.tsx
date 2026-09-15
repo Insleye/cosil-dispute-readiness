@@ -13,7 +13,7 @@ export function MembershipWaitlistForm() {
     setError("");
     const form = new FormData(event.currentTarget);
     const controller = new AbortController();
-    const timeout = window.setTimeout(() => controller.abort(), 15000);
+    const timeout = window.setTimeout(() => controller.abort(), 45000);
 
     try {
       const response = await fetch("/api/membership-waitlist", {
@@ -37,7 +37,7 @@ export function MembershipWaitlistForm() {
       event.currentTarget.reset();
       setStatus("success");
     } catch {
-      setError("We could not confirm your waitlist registration. Please try again.");
+      setError("Your submission is taking longer than expected to confirm. Please check your email before submitting again. If no confirmation arrives, please try again.");
       setStatus("error");
     } finally {
       window.clearTimeout(timeout);
