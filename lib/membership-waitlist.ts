@@ -81,5 +81,38 @@ export async function sendWaitlistNotification(input: WaitlistSubmission) {
     }
   );
   if (!response.ok) throw new Error("Microsoft Graph email notification failed");
+
+  const customerResponse = await fetch(
+    `https://graph.microsoft.com/v1.0/users/${encodeURIComponent(sender)}/sendMail`,
+    {
+      method: "POST",
+      headers: { Authorization: `Bearer ${token}`, "content-type": "application/json" },
+      body: JSON.stringify({
+        message: {
+          subject: "You're on the Cosil Membership waitlist",
+          body: {
+            contentType: "HTML",
+            content: `
+              <p>Hi ${input.name},</p>
+              <p>Thank you for registering your interest in Cosil Membership.</p>
+              <p><strong>You're now on the waitlist</strong>, and we'll contact you when Membership is ready to launch.</p>
+              <p>In the meantime, you can follow Cosil Dispute Watch for practical updates and insights on disputes, risk, governance and mediation.</p>
+              <p><a href="https://whatsapp.com/channel/0029VbDYUmFJf05lwkozbZ01">Follow Cosil Dispute Watch</a></p>
+              <p>Cosil Solutions</p>
+              <p style="font-size:12px;color:#666">This message confirms your Membership waitlist registration. It is not legal advice.</p>
+            `,
+          },
+          toRecipients: [{ emailAddress: { address: input.email } }],
+        },
+        saveToSentItems: true,
+      }),
+      cache: "no-store",
+    }
+  );
+
+  if (!customerResponse.ok) {
+    console.error("Customer waitlist confirmation email failed", await customerResponse.text());
+  }
+
   return { configured: true as const };
 }
