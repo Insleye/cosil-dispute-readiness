@@ -440,7 +440,7 @@ function downloadBriefPdf(
   addHeading("FURTHER SUPPORT");
   addBody(analysis.supportText);
   addBody(
-    "Cosil Membership: GBP 39/month when launched. Dispute Strategy Consultations: from GBP 395 depending on scope and complexity."
+    "Cosil Membership: GBP 39/month when launched. Strategic Dispute Consultation: from GBP 495 depending on scope and complexity."
   );
   addBody("Further information: https://cosilsolutions.co.uk/");
   addGap();
@@ -938,11 +938,12 @@ export function ReadinessAssessment({
                 Bespoke strategic review
               </p>
               <h3 className="mt-1 font-semibold">Explore further support</h3>
-              <p className="mt-1 text-lg font-semibold">From £395</p>
+              <p className="mt-1 text-lg font-semibold">From £495</p>
               <p className="mt-2 text-sm leading-6 text-zinc-600">
-                A Dispute Strategy Consultation can examine your circumstances,
-                key issues, evidence, exposure, proportionality and available
-                options in greater depth. Scope and price depend on the matter.
+                A Strategic Dispute Consultation includes advance review of up to
+                20 pages of relevant material, a 30-minute live consultation and
+                a brief written summary. Any additional fee is agreed before
+                the consultation is finalised.
               </p>
               <Button asChild className="mt-4">
                 <a
