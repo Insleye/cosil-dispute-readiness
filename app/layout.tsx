@@ -6,8 +6,8 @@ import "./globals.css";
 import { SessionProvider } from "next-auth/react";
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://cosil-dispute-readiness.vercel.app"),
-  title: "Dispute Readiness Guide | Cosil Solutions Ltd",
+  metadataBase: new URL("https://readiness.cosilsolutions.co.uk"),
+  title: "Dispute Readiness Check | Cosil Solutions Ltd",
   description:
     "A structured guide from Cosil Solutions Ltd to help people examine a dispute through six areas of readiness, see what is established and recognise where material uncertainty remains.",
   keywords: [
@@ -26,17 +26,17 @@ export const metadata: Metadata = {
   ],
   authors: [{ name: "Cosil Solutions Ltd", url: "https://cosilsolutions.co.uk" }],
   openGraph: {
-    title: "Dispute Readiness Guide | Cosil Solutions Ltd",
+    title: "Dispute Readiness Check | Cosil Solutions Ltd",
     description:
       "Step back from the immediate dispute and examine how ready you are across six strategic areas before your next decision.",
-    url: "https://cosil-dispute-readiness.vercel.app",
+    url: "https://readiness.cosilsolutions.co.uk",
     siteName: "Cosil Solutions Ltd",
     locale: "en_GB",
     type: "website",
   },
   twitter: {
     card: "summary",
-    title: "Dispute Readiness Guide | Cosil Solutions Ltd",
+    title: "Dispute Readiness Check | Cosil Solutions Ltd",
     description:
       "Understand where a matter sits, what risk is forming and what proportionate route may be needed next.",
   },
