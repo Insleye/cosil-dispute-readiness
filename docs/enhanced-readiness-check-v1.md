@@ -6,13 +6,13 @@ Aligned with: Marketing to Money workbook commercial framework (ascension, trust
 
 ## 1. Product summary
 
-**Price:** £24.99, one-off, self-serve
+**Price:** £9.99, one-off, self-serve
 
 **Purpose:** Answers "how ready am I to deal with this dispute?" — not "what should I do about it?"
 
 **Boundary:** Diagnostic and reflective only. Never advises on evidence to gather, correspondence to send, routes to pursue, legal merits, or settlement position. Those remain Cosil's paid professional services.
 
-**Funnel position:** Free content → **£24.99 Enhanced Dispute Readiness Check** → £39/month Membership and/or From £395 Strategy Consultation → Bespoke services. This replaces the existing free Readiness Check entirely.
+**Funnel position:** Free content → **£9.99 Enhanced Dispute Readiness Check** → £39/month Membership and/or From £495 Strategic Dispute Consultation → Bespoke services. This replaces the existing free Readiness Check entirely.
 
 ## 2. Six dimensions (locked)
 
@@ -243,13 +243,13 @@ All band descriptions, complexity wording and result text must use fixed, neutra
 
 **Product setup in Stripe:**
 
-- One-off Price (not subscription) at £24.99, GBP
+- One-off Price (not subscription) at £9.99, GBP
 - Note the Price ID once created — this is what the app references
 
 **Flow:**
 
 1. Person lands on the Readiness Check landing page, not the assessment itself
-2. "Buy access — £24.99" triggers a Stripe Checkout session
+2. "Buy access — £9.99" triggers a Stripe Checkout session
 3. Person completes payment on Stripe's hosted or embedded checkout
 4. Access must be granted only once a Stripe webhook confirms `checkout.session.completed`, never on the basis of reaching a success redirect URL alone
 5. Once confirmed, the person is given access to the 24-question assessment via a server-validated access mechanism
