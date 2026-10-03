@@ -7,7 +7,7 @@ import {
 } from "@/lib/readiness-access";
 import { complexityFlags, dimensionIntroductions, dimensions, questions } from "@/lib/readiness-content";
 
-const LIVE_PAYMENT_LINK = "https://buy.stripe.com/fZucN6e1z2Kc0spdyo5gc00";
+const LIVE_PAYMENT_LINK = "https://buy.stripe.com/00w4gAaPn84w4IF3XO5gc02";
 
 export default async function Page() {
   const cookieStore = await cookies();
