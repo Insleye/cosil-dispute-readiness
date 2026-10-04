@@ -13,9 +13,12 @@ export async function proxy(request: NextRequest) {
     return new Response("pong", { status: 200 });
   }
 
-  // Public endpoints that must work before a user has an application session.
+  // The public purchase page uses its own verified-payment access gate.
+  // It must render without a guest-session cookie for visitors and crawlers.
+  // Public endpoints must also work before a user has an application session.
   // Stripe signs webhook POSTs, so redirecting them through guest auth breaks signature verification.
   if (
+    pathname === "/" ||
     pathname.startsWith("/api/auth") ||
     pathname === "/api/stripe/webhook" ||
     pathname === "/api/readiness/activate"
