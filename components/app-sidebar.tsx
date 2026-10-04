@@ -20,6 +20,7 @@ import {
   SidebarFooter,
   SidebarHeader,
   SidebarMenu,
+  SidebarMenuItem,
   useSidebar,
 } from "@/components/ui/sidebar";
 import {
@@ -63,7 +64,7 @@ export function AppSidebar({ user }: { user: User | undefined }) {
       <Sidebar className="group-data-[side=left]:border-r-0">
         <SidebarHeader>
           <SidebarMenu>
-            <div className="flex flex-row items-center justify-between">
+            <SidebarMenuItem className="flex flex-row items-center justify-between">
               <Link
                 className="flex flex-row items-center gap-3"
                 href="/"
@@ -81,6 +82,7 @@ export function AppSidebar({ user }: { user: User | undefined }) {
                     <TooltipTrigger asChild>
                       <Button
                         className="h-8 p-1 md:h-fit md:p-2"
+                        aria-label="Delete saved checks"
                         onClick={() => setShowDeleteAllDialog(true)}
                         type="button"
                         variant="ghost"
@@ -96,6 +98,7 @@ export function AppSidebar({ user }: { user: User | undefined }) {
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <Button
+                      aria-label="New readiness check"
                       className="h-8 p-1 md:h-fit md:p-2"
                       onClick={() => {
                         setOpenMobile(false);
@@ -113,7 +116,7 @@ export function AppSidebar({ user }: { user: User | undefined }) {
                   </TooltipContent>
                 </Tooltip>
               </div>
-            </div>
+            </SidebarMenuItem>
           </SidebarMenu>
         </SidebarHeader>
         <SidebarContent>
