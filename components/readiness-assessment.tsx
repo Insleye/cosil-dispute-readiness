@@ -141,7 +141,10 @@ function buildAnalysis(
   );
 
   let profileSummary: string;
-  if (established.length >= 5) {
+  if (developing.length === dimensions.length) {
+    profileSummary =
+      "All six areas are developing. You have some groundwork in place, but your answers do not identify an established area yet. Start by checking time-sensitive requirements, then use the practical steps below to organise the issues, evidence and options before your next decision.";
+  } else if (established.length >= 5) {
     profileSummary =
       "Your profile is strongly established across most areas. The value now lies less in doing more and more in checking that the few weaker or more complex elements do not distort an otherwise well-prepared position.";
   } else if (needs.length >= 3) {
@@ -164,14 +167,26 @@ function buildAnalysis(
     }));
 
   if (strengths.length === 0) {
+    const highestScore = Math.max(...bands.map((item) => item.score));
+    const allScoresEqual = new Set(bands.map((item) => item.score)).size === 1;
     const strongest = [...bands].sort((a, b) => b.score - a.score).slice(0, 2);
-    strongest.forEach((item) =>
+    if (highestScore <= 2) {
+      strengths.push({
+        title: "Start with the foundations",
+        body: "No area is currently established from your answers. This does not decide the merits of your dispute. Use the priorities below to organise what is known, what is missing and what needs a decision.",
+      });
+    } else if (allScoresEqual) {
+      strengths.push({
+        title: "A developing foundation across all six areas",
+        body: "Your scores are level, so no area is identified as stronger than another. Use the next steps to build a clearer issue map, evidence record and comparison of your options.",
+      });
+    } else strongest.forEach((item) =>
       strengths.push({
         title: `A foundation to build on: ${item.label}`,
         body:
           item.band === "Developing"
-            ? `This is one of your relatively stronger areas. ${dimensionGuidance[item.key].strength}`
-            : "Your answers show some awareness in this area, even though it is not yet consistently established. That gives you a starting point for organising the dispute more deliberately.",
+            ? "This is one of your relatively stronger areas, but it is still developing. Some groundwork is present; check the remaining gaps before treating the area as established."
+            : "This is one of your relatively higher scores, but it still needs attention. Use the practical steps below to build the missing foundations.",
       })
     );
   }
@@ -279,6 +294,13 @@ function buildAnalysis(
     );
   }
 
+  if (nextSteps.length === 0) {
+    nextSteps.push(
+      "Before your next decision, check whether any new evidence, deadline or change in the other party's position affects your current plan.",
+      "Compare the realistic routes forward against your desired outcome, cost, time, control and relationships.",
+      "Record the next decision, who is responsible for it and the date when you will review progress."
+    );
+  }
   const dedupedNext = [...new Set(nextSteps)].slice(0, 6);
 
   const reflections = ranked
@@ -341,7 +363,7 @@ function ascii(text: string) {
     .replace(/[^\x20-\x7E]/g, "");
 }
 
-function wrapPdfText(text: string, max = 88) {
+function wrapPdfText(text: string, max = 78) {
   const words = ascii(text).split(/\s+/);
   const lines: string[] = [];
   let line = "";
@@ -367,10 +389,10 @@ function downloadBriefPdf(
   scores: Record<DimensionKey, number>,
   analysis: Analysis
 ) {
-  const sections: { text: string; bold?: boolean }[] = [];
+  const sections: { text: string; bold?: boolean; blockStart?: boolean }[] = [];
   const addHeading = (text: string) => sections.push({ text, bold: true });
   const addBody = (text: string) =>
-    wrapPdfText(text).forEach((line) => sections.push({ text: line }));
+    wrapPdfText(text).forEach((line, index) => sections.push({ text: line, blockStart: index === 0 }));
   const addGap = () => sections.push({ text: "" });
 
   addHeading("COSIL SOLUTIONS - DISPUTE READINESS BRIEF");
@@ -386,12 +408,15 @@ function downloadBriefPdf(
     addBody(`${dimension.label}: ${bandFor(scores[dimension.key])}`)
   );
   addGap();
+  addBody("Needs Attention: key foundations are unclear or missing. Developing: some groundwork is present, with gaps to clarify. Established: your answers indicate consistent preparation in this area.");
+  addBody("These bands describe your reported preparation, not the strength of your case.");
+  addGap();
 
-  addHeading("PROFESSIONAL INTERPRETATION");
+  addHeading("WHAT YOUR ANSWERS SUGGEST");
   addBody(analysis.profileSummary);
   addGap();
 
-  addHeading("STRONGER AREAS");
+  addHeading("FOUNDATIONS TO BUILD ON");
   analysis.strengths.forEach((item) => {
     addBody(`${item.title}: ${item.body}`);
     addGap();
@@ -437,6 +462,23 @@ function downloadBriefPdf(
     addGap();
   });
 
+  addHeading("YOUR NEXT ACTION NOTE");
+  addBody("Use this space to turn the results into a short plan. Start with any time-sensitive step, then choose one practical action from your priorities.");
+  addGap();
+  [
+    "The decision or issue I need to clarify:",
+    "Any deadline I need to confirm:",
+    "The most important evidence or information gap:",
+    "The next action, and who will take it:",
+    "The date I will review progress:",
+  ].forEach((prompt) => {
+    addBody(prompt);
+    addBody("____________________________________________________________");
+    addGap();
+  });
+  addBody("This brief is generated from your answers. Cosil has not reviewed your documents or independently assessed your matter through this Check.");
+  addGap();
+
   addHeading("FURTHER SUPPORT");
   addBody(analysis.supportText);
   addBody(
@@ -448,11 +490,22 @@ function downloadBriefPdf(
     "Cosil Solutions Ltd. Strategic dispute consultancy and mediation support. This Brief is for informational and diagnostic purposes only."
   );
 
-  const linesPerPage = 48;
-  const pages: { text: string; bold?: boolean }[][] = [];
-  for (let i = 0; i < sections.length; i += linesPerPage) {
-    pages.push(sections.slice(i, i + linesPerPage));
+  const linesPerPage = 42;
+  const pages: { text: string; bold?: boolean; blockStart?: boolean }[][] = [];
+  let pageLines: { text: string; bold?: boolean; blockStart?: boolean }[] = [];
+  for (let position = 0; position < sections.length; position++) {
+    const line = sections[position];
+    let blockLength = 1;
+    if (line.blockStart || line.bold) {
+      while (position + blockLength < sections.length && sections[position + blockLength].text && !sections[position + blockLength].bold && (!sections[position + blockLength].blockStart || (line.bold && blockLength === 1))) blockLength++;
+    }
+    if (pageLines.length >= linesPerPage || (pageLines.length > 0 && blockLength <= linesPerPage && pageLines.length + blockLength > linesPerPage)) {
+      pages.push(pageLines);
+      pageLines = [];
+    }
+    if (line.text || pageLines.length) pageLines.push(line);
   }
+  if (pageLines.length) pages.push(pageLines);
 
   const objects: string[] = [];
   const pageObjectNumbers: number[] = [];
@@ -481,10 +534,11 @@ function downloadBriefPdf(
     const contentObj = pageObj + 1;
     let stream = "BT\n50 790 Td\n";
     for (const line of pageLines) {
-      const font = line.bold ? "/F2 12 Tf" : "/F1 10 Tf";
-      stream += `${font}\n(${escapePdf(ascii(line.text))}) Tj\n0 -15 Td\n`;
+      const font = line.bold ? "/F2 12 Tf" : "/F1 11 Tf";
+      stream += `${font}\n(${escapePdf(ascii(line.text))}) Tj\n0 -17 Td\n`;
     }
     stream += "ET";
+    stream += `\nBT\n/F1 9 Tf\n50 38 Td\n(Cosil Solutions Ltd | Page ${index + 1} of ${pages.length}) Tj\nET`;
     objects[contentObj] = `<< /Length ${stream.length} >>\nstream\n${stream}\nendstream`;
     objects[pageObj] =
       `<< /Type /Page /Parent ${pagesObj} 0 R /MediaBox [0 0 595 842] ` +
@@ -587,26 +641,26 @@ export function ReadinessAssessment({
     return (
       <main className="mx-auto max-w-3xl px-4 py-12 sm:py-16">
         <div className="rounded-2xl border bg-background p-6 shadow-sm sm:p-10">
-          <p className="mb-3 text-sm font-medium text-zinc-500">
+          <p className="mb-3 text-sm font-medium text-zinc-600 dark:text-zinc-400">
             Cosil Solutions Ltd
           </p>
           <h1 className="text-3xl font-semibold tracking-tight">
-            Dispute Readiness Guide
+            Dispute Readiness Check
           </h1>
-          <p className="mt-4 leading-7 text-zinc-600">
+          <p className="mt-4 leading-7 text-zinc-600 dark:text-zinc-300">
             A structured diagnostic designed to help you step back from the
             immediate dispute, test how clear your current position really is
             and identify what deserves attention before your next decision.
           </p>
-          <div className="mt-6 rounded-xl border bg-zinc-50 p-4 text-sm leading-6 text-zinc-600 dark:bg-zinc-900">
-            You will receive a six-part readiness profile, professional
+          <div className="mt-6 rounded-xl border bg-zinc-50 p-4 text-sm leading-6 text-zinc-600 dark:bg-zinc-900 dark:text-zinc-300">
+            You will receive a six-part readiness profile, tailored
             interpretation of the connections between your answers, prioritised
             practical considerations and a personalised Dispute Readiness Brief
             to download and retain.
           </div>
           <div className="mt-8 flex flex-wrap items-center gap-3">
             <Button onClick={() => setStarted(true)}>Start assessment</Button>
-            <span className="text-sm text-zinc-500">
+            <span className="text-sm text-zinc-600 dark:text-zinc-400">
               24 questions plus 5 context questions
             </span>
           </div>
@@ -626,7 +680,7 @@ export function ReadinessAssessment({
       questions[questionIndex - 1].dimension !== question.dimension;
     return (
       <main className="mx-auto max-w-3xl px-4 py-10 sm:py-14">
-        <div className="mb-6 flex items-center justify-between text-sm text-zinc-500">
+        <div className="mb-6 flex items-center justify-between text-sm text-zinc-600 dark:text-zinc-400">
           <span>{dimension}</span>
           <span>
             {questionIndex + 1} of {questions.length}
@@ -642,7 +696,7 @@ export function ReadinessAssessment({
         </div>
         {isDimensionStart ? (
           <section className="mb-5 rounded-2xl border bg-zinc-50 p-5 dark:bg-zinc-900 sm:p-6">
-            <p className="text-xs font-semibold uppercase tracking-wider text-zinc-500">
+            <p className="text-xs font-semibold uppercase tracking-wider text-zinc-600 dark:text-zinc-400">
               The Cosil lens
             </p>
             <h2 className="mt-2 text-xl font-semibold">{intro.heading}</h2>
@@ -680,14 +734,14 @@ export function ReadinessAssessment({
   if (!completed) {
     return (
       <main className="mx-auto max-w-3xl px-4 py-10 sm:py-14">
-        <div className="mb-6 flex items-center justify-between text-sm text-zinc-500">
+        <div className="mb-6 flex items-center justify-between text-sm text-zinc-600 dark:text-zinc-400">
           <span>Context</span>
           <span>
             {flagIndex + 1} of {complexityFlags.length}
           </span>
         </div>
         <section className="rounded-2xl border bg-background p-6 shadow-sm sm:p-8">
-          <p className="mb-3 text-sm text-zinc-500">
+          <p className="mb-3 text-sm text-zinc-600 dark:text-zinc-400">
             These questions provide context only and do not affect your
             readiness profile.
           </p>
@@ -718,11 +772,11 @@ export function ReadinessAssessment({
   return (
     <main className="mx-auto max-w-5xl px-4 py-10 sm:py-14">
       <div className="rounded-2xl border bg-background p-6 shadow-sm sm:p-9">
-        <p className="text-sm font-medium text-zinc-500">Your result</p>
+        <p className="text-sm font-medium text-zinc-600 dark:text-zinc-300">Your result</p>
         <h1 className="mt-2 text-3xl font-semibold tracking-tight">
           Your Dispute Readiness Profile
         </h1>
-        <p className="mt-3 max-w-3xl leading-7 text-zinc-600">
+        <p className="mt-3 max-w-3xl leading-7 text-zinc-600 dark:text-zinc-300">
           This profile is a diagnostic view of how prepared your current
           dispute position appears across six connected areas. It does not
           assess legal merit, determine rights or predict an outcome.
@@ -731,7 +785,7 @@ export function ReadinessAssessment({
         <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {dimensions.map((dimension) => (
             <div key={dimension.key} className="rounded-xl border p-5">
-              <p className="text-sm text-zinc-500">{dimension.label}</p>
+              <p className="text-sm text-zinc-600 dark:text-zinc-400">{dimension.label}</p>
               <p className="mt-2 text-xl font-semibold">
                 {bandFor(scores[dimension.key])}
               </p>
@@ -740,8 +794,8 @@ export function ReadinessAssessment({
         </div>
 
         <section className="mt-8 rounded-2xl border bg-zinc-50 p-5 dark:bg-zinc-900 sm:p-6">
-          <p className="text-xs font-semibold uppercase tracking-wider text-zinc-500">
-            Professional interpretation
+          <p className="text-xs font-semibold uppercase tracking-wider text-zinc-600 dark:text-zinc-400">
+            What your answers suggest
           </p>
           <h2 className="mt-2 text-xl font-semibold">What your results suggest</h2>
           <p className="mt-3 leading-7 text-zinc-700 dark:text-zinc-300">
@@ -752,13 +806,13 @@ export function ReadinessAssessment({
         <div className="mt-8 grid gap-6 lg:grid-cols-2">
           <section className="rounded-2xl border p-5 sm:p-6">
             <h2 className="text-xl font-semibold">
-              Where you appear better prepared
+              Foundations to build on
             </h2>
             <div className="mt-5 space-y-5">
               {analysis.strengths.map((item) => (
                 <div key={item.title}>
                   <h3 className="font-semibold">{item.title}</h3>
-                  <p className="mt-1 text-sm leading-6 text-zinc-600">
+                  <p className="mt-1 text-sm leading-6 text-zinc-600 dark:text-zinc-300">
                     {item.body}
                   </p>
                 </div>
@@ -775,13 +829,13 @@ export function ReadinessAssessment({
                 analysis.priorities.map((item) => (
                   <div key={item.title}>
                     <h3 className="font-semibold">{item.title}</h3>
-                    <p className="mt-1 text-sm leading-6 text-zinc-600">
+                    <p className="mt-1 text-sm leading-6 text-zinc-600 dark:text-zinc-300">
                       {item.body}
                     </p>
                   </div>
                 ))
               ) : (
-                <p className="text-sm leading-6 text-zinc-600">
+                <p className="text-sm leading-6 text-zinc-600 dark:text-zinc-300">
                   No dimension-level gap is currently showing. Your focus is
                   therefore on maintaining clarity and checking whether new
                   evidence, deadlines, complexity or changed objectives alter
@@ -793,7 +847,7 @@ export function ReadinessAssessment({
         </div>
 
         <section className="mt-8 rounded-2xl border p-5 sm:p-6">
-          <p className="text-xs font-semibold uppercase tracking-wider text-zinc-500">
+          <p className="text-xs font-semibold uppercase tracking-wider text-zinc-600 dark:text-zinc-400">
             Dispute dynamics
           </p>
           <h2 className="mt-2 text-xl font-semibold">
@@ -814,14 +868,14 @@ export function ReadinessAssessment({
         {analysis.complexityText ? (
           <section className="mt-8 rounded-2xl border p-5 sm:p-6">
             <h2 className="text-xl font-semibold">Complexity in context</h2>
-            <p className="mt-3 leading-7 text-zinc-700">
+            <p className="mt-3 leading-7 text-zinc-700 dark:text-zinc-300">
               {analysis.complexityText}
             </p>
             <div className="mt-4 flex flex-wrap gap-2">
               {analysis.complexityFactors.map((factor) => (
                 <span
                   key={factor}
-                  className="rounded-full border px-3 py-1 text-xs text-zinc-600"
+                  className="rounded-full border px-3 py-1 text-xs text-zinc-600 dark:text-zinc-300"
                 >
                   {factor}
                 </span>
@@ -832,7 +886,7 @@ export function ReadinessAssessment({
 
         {analysis.contextInsight ? (
           <section className="mt-8 rounded-2xl border bg-zinc-50 p-5 dark:bg-zinc-900 sm:p-6">
-            <p className="text-xs font-semibold uppercase tracking-wider text-zinc-500">
+            <p className="text-xs font-semibold uppercase tracking-wider text-zinc-600 dark:text-zinc-400">
               Disputes in context
             </p>
             <p className="mt-3 leading-7 text-zinc-700 dark:text-zinc-300">
@@ -842,17 +896,22 @@ export function ReadinessAssessment({
         ) : null}
 
         <section className="mt-8 rounded-2xl border p-5 sm:p-6">
-          <p className="text-xs font-semibold uppercase tracking-wider text-zinc-500">
+          <p className="text-xs font-semibold uppercase tracking-wider text-zinc-600 dark:text-zinc-400">
             Prioritised
           </p>
           <h2 className="mt-2 text-xl font-semibold">Practical next steps</h2>
+          <p className="mt-3 text-sm leading-6 text-zinc-600 dark:text-zinc-300">
+            Confirm any time-sensitive requirements first. Then choose one action below,
+            identify who will take it and set a date to review progress. Your downloadable
+            brief includes a short action note to help you do this.
+          </p>
           <ol className="mt-5 space-y-4">
             {analysis.nextSteps.map((step, index) => (
               <li key={step} className="flex gap-4">
                 <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full border text-sm font-semibold">
                   {index + 1}
                 </span>
-                <p className="pt-0.5 text-sm leading-6 text-zinc-700">{step}</p>
+                <p className="pt-0.5 text-sm leading-6 text-zinc-700 dark:text-zinc-300">{step}</p>
               </li>
             ))}
           </ol>
@@ -860,13 +919,13 @@ export function ReadinessAssessment({
 
         <section className="mt-8 rounded-2xl border p-5 sm:p-6">
           <h2 className="text-xl font-semibold">Before you escalate</h2>
-          <p className="mt-2 text-sm leading-6 text-zinc-600">
+          <p className="mt-2 text-sm leading-6 text-zinc-600 dark:text-zinc-300">
             Use these questions to test whether the next step is deliberate,
             proportionate and connected to what remains unresolved.
           </p>
           <ul className="mt-4 space-y-3">
             {analysis.reflections.map((item) => (
-              <li key={item} className="text-sm leading-6 text-zinc-700">
+              <li key={item} className="text-sm leading-6 text-zinc-700 dark:text-zinc-300">
                 • {item}
               </li>
             ))}
@@ -875,14 +934,14 @@ export function ReadinessAssessment({
 
         <section className="mt-8 rounded-2xl border bg-zinc-950 p-5 text-white sm:p-7">
           <p className="text-xs font-semibold uppercase tracking-wider text-zinc-400">
-            Included with your Guide
+            Included with your Check
           </p>
           <h2 className="mt-2 text-2xl font-semibold">
             Your Dispute Readiness Brief
           </h2>
           <p className="mt-3 max-w-3xl leading-7 text-zinc-300">
             Download a personalised record of your six-part profile,
-            professional interpretation, important connections, complexity
+            an explanation of your results, important connections, complexity
             context and prioritised practical considerations.
           </p>
           <Button
@@ -895,24 +954,24 @@ export function ReadinessAssessment({
         </section>
 
         <section className="mt-10 border-t pt-8">
-          <p className="text-xs font-semibold uppercase tracking-wider text-zinc-500">
+          <p className="text-xs font-semibold uppercase tracking-wider text-zinc-600 dark:text-zinc-400">
             Further support is optional
           </p>
           <h2 className="mt-2 text-xl font-semibold">
             Decide what level of support is proportionate
           </h2>
-          <p className="mt-3 max-w-3xl leading-7 text-zinc-600">
+          <p className="mt-3 max-w-3xl leading-7 text-zinc-600 dark:text-zinc-300">
             {analysis.supportText}
           </p>
 
           <div className="mt-6 grid gap-4 sm:grid-cols-2">
             <div className="rounded-xl border p-5">
-              <p className="text-sm font-medium text-zinc-500">
+              <p className="text-sm font-medium text-zinc-600 dark:text-zinc-400">
                 Ongoing support
               </p>
               <h3 className="mt-1 font-semibold">Cosil Membership</h3>
               <p className="mt-1 text-lg font-semibold">£39/month</p>
-              <p className="mt-2 text-sm leading-6 text-zinc-600">
+              <p className="mt-2 text-sm leading-6 text-zinc-600 dark:text-zinc-300">
                 Designed for people who want ongoing dispute-readiness
                 resources, a monthly live clinic, general updates and member
                 benefits without moving straight into bespoke support.
@@ -934,12 +993,12 @@ export function ReadinessAssessment({
             </div>
 
             <div className="rounded-xl border p-5">
-              <p className="text-sm font-medium text-zinc-500">
+              <p className="text-sm font-medium text-zinc-600 dark:text-zinc-400">
                 Bespoke strategic review
               </p>
               <h3 className="mt-1 font-semibold">Explore further support</h3>
               <p className="mt-1 text-lg font-semibold">From £495</p>
-              <p className="mt-2 text-sm leading-6 text-zinc-600">
+              <p className="mt-2 text-sm leading-6 text-zinc-600 dark:text-zinc-300">
                 A Strategic Dispute Consultation includes advance review of up to
                 20 pages of relevant material, a 30-minute live consultation and
                 a brief written summary. Any additional fee is agreed before
@@ -958,8 +1017,8 @@ export function ReadinessAssessment({
           </div>
         </section>
 
-        <div className="mt-8 rounded-xl bg-zinc-50 p-4 text-xs leading-5 text-zinc-500 dark:bg-zinc-900">
-          The Dispute Readiness Guide is diagnostic and informational. It does
+        <div className="mt-8 rounded-xl bg-zinc-50 p-4 text-xs leading-5 text-zinc-600 dark:bg-zinc-900 dark:text-zinc-300">
+          The Dispute Readiness Check is diagnostic and informational. It does
           not provide legal advice, determine legal rights, assess legal merits
           or predict the outcome of a dispute.
         </div>
